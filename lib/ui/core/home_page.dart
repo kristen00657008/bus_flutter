@@ -1,3 +1,7 @@
+import 'package:bus/bean/weather/weather_bean.dart';
+import 'package:bus/bloc/system/application_bloc.dart';
+import 'package:bus/http/weather/weather_repository.dart';
+import 'package:bus/resource/city_data.dart';
 import 'package:bus/resource/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:bus/bloc/core/home_page_bloc.dart';
@@ -101,7 +105,9 @@ class _HomePageState extends State<HomePage>
                 ),
               ],
               flexibleSpace: _buildAppBarFlexibleSpace(isSearching),
-              bottom: (isSearching || bloc.controller.isAnimating) ? null : _buildAppBarBottom(isSearching));
+              bottom: (isSearching || bloc.controller.isAnimating)
+                  ? null
+                  : _buildAppBarBottom(isSearching));
         });
   }
 
@@ -115,7 +121,7 @@ class _HomePageState extends State<HomePage>
         children: [
           AnimatedContainer(
             duration: Duration(milliseconds: 200),
-            width: (isSearching || bloc.controller.isAnimating) ? 0 : 70,
+            width: isSearching ? 0 : 70,
             child: (isSearching || bloc.controller.isAnimating)
                 ? Container()
                 : IconButton(
@@ -123,9 +129,7 @@ class _HomePageState extends State<HomePage>
                       Icons.menu,
                       size: 35,
                     ),
-                    onPressed: () {
-                      bloc.getWeather();
-                    },
+                    onPressed: () {},
                   ),
           ),
           Expanded(
@@ -150,35 +154,67 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildAppBarFlexibleSpace(bool isSearching) {
-    return FlexibleSpaceBar(
-      collapseMode: CollapseMode.pin,
-      background: Offstage(
-        offstage: isSearching || bloc.controller.isAnimating,
-        child: Container(
-          padding: EdgeInsets.only(
-              top: kToolbarHeight * 2, bottom: appBarBottomHeight),
-          margin: EdgeInsets.symmetric(
-            vertical: 8,
-          ),
-          child: Row(
-            children: [
-              _buildWeatherLeft(),
-              _buildWeatherRight(),
-            ],
-          ),
-        ),
-      ),
-    );
+    return StreamBuilder<WeatherBean>(
+        stream: bloc.weatherBeanStream,
+        builder: (context, snapshot) {
+          var weatherData = snapshot.data;
+          return FlexibleSpaceBar(
+            collapseMode: CollapseMode.pin,
+            background: Offstage(
+              offstage: isSearching || bloc.controller.isAnimating,
+              child: Container(
+                padding: EdgeInsets.only(
+                    top: kToolbarHeight * 2, bottom: appBarBottomHeight),
+                margin: EdgeInsets.symmetric(
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    _buildWeatherLeft(weatherData),
+                    _buildWeatherRight(weatherData),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
   }
 
-  Widget _buildWeatherLeft() {
+  Widget _buildWeatherLeft(WeatherBean? weatherData) {
+    final String wX = weatherData != null
+        ? weatherData.weatherElementList[6].time[0].elementValue.last.value
+        : "——";
+    var weatherIcon = "";
+    switch (wX) {
+      case "02": // 晴時多雲
+        weatherIcon = "assets/sun.png";
+        break;
+      case "03": // 多雲時晴
+        weatherIcon = "assets/partly_clear.png";
+        break;
+      case "04": // 多雲
+        weatherIcon = "assets/cloudy.png";
+        break;
+      case "05": // 多雲時陰
+        weatherIcon = "assets/over_cloudy.png";
+        break;
+      case "06": // 陰時多雲
+        weatherIcon = "assets/partly_clear.png";
+        break;
+      case "22": // 多雲午後短暫陣雨
+        weatherIcon = "assets/raining.png";
+        break;
+      default:
+        weatherIcon = "assets/partly_clear.png";
+        break;
+    }
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.5,
+      width: MediaQuery.of(context).size.width * 0.48,
       child: Row(
         children: [
           Expanded(
             flex: 6,
-            child: _buildTemperature(),
+            child: _buildTemperature(weatherData),
           ),
           Container(
             width: 1,
@@ -188,63 +224,96 @@ class _HomePageState extends State<HomePage>
             color: Colors.grey,
           ),
           Expanded(
-            flex: 5,
-            child: Icon(
-              Icons.sunny,
-              size: 80,
-            ),
-          ),
+              flex: 5,
+              child: FractionallySizedBox(
+                  widthFactor: 0.7,
+                  child: InkWell(
+                      onTap: () {
+                        print(wX);
+                        print(weatherIcon);
+                      },
+                      child: Image.asset(weatherIcon)))),
         ],
       ),
     );
   }
 
-  Widget _buildTemperature() {
+  Widget _buildTemperature(WeatherBean? weatherData) {
+    final T = weatherData != null
+        ? weatherData.weatherElementList[1].time[0].elementValue.first.value
+        : "——";
+    final minT = weatherData != null
+        ? weatherData.weatherElementList[8].time[0].elementValue.first.value
+        : "——";
+    final maxT = weatherData != null
+        ? weatherData.weatherElementList[12].time[0].elementValue.first.value
+        : "——";
     return Column(
-      children: const [
+      children: [
         Text(
-          "32",
+          T,
           style: TextStyle(
             fontSize: 60,
             color: whiteColor,
           ),
         ),
-        Text(
-          "30 / 33",
-          style: TextStyle(
-            fontSize: 15,
-            color: whiteColor,
+        Expanded(
+          child: Text(
+            minT + " / " + maxT,
+            style: TextStyle(
+              fontSize: 15,
+              color: whiteColor,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildWeatherRight() {
+  Widget _buildWeatherRight(WeatherBean? weatherData) {
+    final String wX = weatherData != null
+        ? weatherData.weatherElementList[6].time[0].elementValue.first.value
+        : "——";
+    final String minCT = weatherData != null
+        ? weatherData.weatherElementList[3].time[0].elementValue.last.value
+        : "——";
+    final String maxCT = weatherData != null
+        ? weatherData.weatherElementList[7].time[0].elementValue.last.value
+        : "——";
+    final cT = weatherData != null
+        ? minCT == maxCT
+            ? minCT
+            : minCT + "至" + maxCT
+        : "——";
+    final poP12h = weatherData != null
+        ? "降雨 " +
+            weatherData.weatherElementList[0].time[0].elementValue.last.value +
+            "%"
+        : "降雨 ——%";
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.5,
+      width: MediaQuery.of(context).size.width * 0.52,
       child: Row(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: const [
+            children: [
               Text(
-                "晴時多雲",
+                wX,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 14,
                   color: whiteColor,
                 ),
               ),
               Text(
-                "悶熱",
+                cT,
                 style: TextStyle(
                   fontSize: 12,
                   color: whiteColor,
                 ),
               ),
               Text(
-                "降雨 10%",
+                poP12h,
                 style: TextStyle(
                   fontSize: 12,
                   color: whiteColor,
@@ -258,28 +327,45 @@ class _HomePageState extends State<HomePage>
             padding: EdgeInsets.only(right: 10, top: 10),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: ConstrainedBox(
-                constraints: BoxConstraints.tightFor(width: 80, height: 20),
-                child: ElevatedButton(
+              child: Container(
+                color: buttonWhiteColor,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints.tightFor(width: 60, height: 20),
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(
                         Icons.location_on,
                         size: 15,
                       ),
                       Expanded(
-                        child: Text('台中市'),
+                        child: PopupMenuButton(
+                          itemBuilder: (context) => cities
+                              .map((city) => PopupMenuItem<String>(
+                                    value: city,
+                                    child: Text(
+                                      city,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: buttonDisableColor,
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                          child: Text(
+                            ApplicationBloc.getInstance().currentCity,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: buttonDisableColor,
+                            ),
+                          ),
+                          onSelected: (String city) {
+                            bloc.setCity(city);
+                            bloc.getWeather();
+                          },
+                        ),
                       ),
                     ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    primary: buttonWhiteColor,
-                    textStyle: TextStyle(
-                      fontSize: 10,
-                      color: buttonDefaultColor,
-                    ),
-                  ),
-                  onPressed: () {},
                 ),
               ),
             ),

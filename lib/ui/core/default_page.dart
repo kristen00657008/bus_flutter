@@ -23,7 +23,7 @@ class _DefaultPageState extends State<DefaultPage> {
     super.initState();
     bloc = BlocProvider.of<DefaultPageBloc>(context);
 
-    bloc.getLocate();
+    ApplicationBloc.getInstance().getNeededApi();
   }
 
   @override
