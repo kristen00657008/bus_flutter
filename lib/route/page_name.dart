@@ -11,4 +11,7 @@ class PageName{
   static const String MRTPage = "/MRTPage";
 
   static const String SettingPage = "/SettingPage";
+
+  static const String SearchPage = "/SearchPage";
+
 }

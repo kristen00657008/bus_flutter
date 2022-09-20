@@ -38,77 +38,82 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: _tabs.length,
-      child: NestedScrollView(
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return <Widget>[
-              _buildAppBar(innerBoxIsScrolled),
-            ];
-          },
-          body: TabBarView(
-            children: _tabs.map((String tabName) {
-              return CustomScrollView(
-                slivers: <Widget>[
-                  // SliverOverlapInjector(
-                  //     handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-                  SliverFixedExtentList(
-                    itemExtent: 48.0,
-                    delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) => ListTile(
-                          title: Text(
-                        '$tabName Item $index',
-                        style: TextStyle(color: Colors.white),
-                      )),
-                      childCount: 30,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          )),
+      child: StreamBuilder<bool>(
+          stream: bloc.isSearchingStream,
+          initialData: false,
+          builder: (context, snapshot) {
+            var isSearching = snapshot.requireData;
+            return NestedScrollView(
+                headerSliverBuilder:
+                    (BuildContext context, bool innerBoxIsScrolled) {
+                  return <Widget>[
+                    _buildAppBar(innerBoxIsScrolled, isSearching),
+                  ];
+                },
+                body: isSearching
+                    ? Center(
+                        child: Text(
+                          "IsSearching",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      )
+                    : TabBarView(
+                        children: _tabs.map((String tabName) {
+                          return CustomScrollView(
+                            slivers: <Widget>[
+                              SliverFixedExtentList(
+                                itemExtent: 48.0,
+                                delegate: SliverChildBuilderDelegate(
+                                  (BuildContext context, int index) => ListTile(
+                                      title: Text(
+                                    '$tabName Item $index',
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                                  childCount: 30,
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ));
+          }),
     );
   }
 
-  Widget _buildAppBar(bool innerBoxIsScrolled) {
-    return StreamBuilder<bool>(
-        stream: bloc.isSearchingStream,
-        builder: (context, snapshot) {
-          var isSearching = false;
-          if (snapshot.hasData) {
-            isSearching = snapshot.requireData;
-          }
-          return SliverAppBar(
-              titleSpacing: 0,
-              title: _buildAppBarTitle(isSearching),
-              floating: false,
-              snap: false,
-              pinned: true,
-              expandedHeight: bloc.expandHeight,
-              forceElevated: innerBoxIsScrolled,
-              backgroundColor: appBarColor,
-              actions: [
-                AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  width: isSearching ? 70 : 0,
-                  child: isSearching
-                      ? TextButton(
-                          child: Text(
-                            "取消",
-                            style: TextStyle(color: Colors.white, fontSize: 20),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          onPressed: () {
-                            bloc.changeToHomePage();
-                            bloc.setIsSearching(false);
-                          },
-                        )
-                      : Container(),
-                ),
-              ],
-              flexibleSpace: _buildAppBarFlexibleSpace(isSearching),
-              bottom: (isSearching || bloc.controller.isAnimating)
-                  ? null
-                  : _buildAppBarBottom(isSearching));
-        });
+  Widget _buildAppBar(bool innerBoxIsScrolled, bool isSearching) {
+    return SliverAppBar(
+        titleSpacing: 0,
+        title: _buildAppBarTitle(isSearching),
+        floating: false,
+        snap: false,
+        pinned: true,
+        expandedHeight: bloc.expandHeight,
+        forceElevated: innerBoxIsScrolled,
+        automaticallyImplyLeading: false,
+        actions: [
+          AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            width: isSearching ? 70 : 0,
+            child: isSearching
+                ? TextButton(
+                    child: Text(
+                      "取消",
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onPressed: () {
+                      bloc.changeToHomePage();
+                      bloc.setIsSearching(false);
+                      bloc.searchTextClear();
+                    },
+                  )
+                : Container(),
+          ),
+        ],
+        flexibleSpace: _buildAppBarFlexibleSpace(isSearching),
+        bottom: (isSearching || bloc.controller.isAnimating)
+            ? null
+            : _buildAppBarBottom(isSearching));
   }
 
   Widget _buildAppBarTitle(bool isSearching) {
@@ -129,22 +134,68 @@ class _HomePageState extends State<HomePage>
                       Icons.menu,
                       size: 35,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
                   ),
           ),
           Expanded(
-            child: TextField(
+            child: InkWell(
               onTap: () {
                 bloc.setIsSearching(true);
                 bloc.changeToSearching();
               },
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: searchBarColor,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(10),
+              child: TextField(
+                controller: bloc.searchController,
+                textAlign: isSearching ? TextAlign.start : TextAlign.center,
+                style: TextStyle(color: whiteColor, fontSize: 18),
+                enabled: isSearching ? true : false,
+                autofocus: true,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: searchBarColor,
+                  hintText: isSearching ? "搜尋公車路線/起迄方向名" : "搜尋公車路線",
+                  hintStyle: TextStyle(color: whiteColor, fontSize: 18),
+                  prefixIcon: Icon(Icons.search),
+                  suffixIcon: StreamBuilder<String>(
+                      stream: bloc.searchTextStream,
+                      builder: (context, snapshot) {
+                        return Offstage(
+                          offstage: snapshot.hasData
+                              ? snapshot.requireData.isEmpty
+                              : true,
+                          child: InkWell(
+                            onTap: () {
+                              bloc.searchTextClear();
+                            },
+                            splashFactory: NoSplash.splashFactory,
+                            child: Container(
+                              margin: EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white70,
+                              ),
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.grey,
+                                size: 15,
+                              ),
+                            ), //............
+                          ),
+                        );
+                      }),
+                  suffixIconConstraints: BoxConstraints(maxHeight: 20),
+                  contentPadding: EdgeInsets.only(bottom: 0, left: 5),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
+                onChanged: (text) {
+                  bloc.debounce.run(() {
+                    bloc.searchTextChange(text);
+                  });
+                },
               ),
             ),
           ),
@@ -158,21 +209,31 @@ class _HomePageState extends State<HomePage>
         stream: bloc.weatherBeanStream,
         builder: (context, snapshot) {
           var weatherData = snapshot.data;
-          return FlexibleSpaceBar(
-            collapseMode: CollapseMode.pin,
-            background: Offstage(
-              offstage: isSearching || bloc.controller.isAnimating,
-              child: Container(
-                padding: EdgeInsets.only(
-                    top: kToolbarHeight * 2, bottom: appBarBottomHeight),
-                margin: EdgeInsets.symmetric(
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    _buildWeatherLeft(weatherData),
-                    _buildWeatherRight(weatherData),
-                  ],
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: const [appBarColor1, appBarColor2],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 1.0],
+              ),
+            ),
+            child: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Offstage(
+                offstage: isSearching || bloc.controller.isAnimating,
+                child: Container(
+                  padding: EdgeInsets.only(
+                      top: kToolbarHeight * 2, bottom: appBarBottomHeight),
+                  margin: EdgeInsets.symmetric(
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildWeatherLeft(weatherData),
+                      _buildWeatherRight(weatherData),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -183,7 +244,7 @@ class _HomePageState extends State<HomePage>
   Widget _buildWeatherLeft(WeatherBean? weatherData) {
     final String wX = weatherData != null
         ? weatherData.weatherElementList[6].time[0].elementValue.last.value
-        : "——";
+        : "";
     var weatherIcon = "";
     switch (wX) {
       case "02": // 晴時多雲
@@ -226,13 +287,7 @@ class _HomePageState extends State<HomePage>
           Expanded(
               flex: 5,
               child: FractionallySizedBox(
-                  widthFactor: 0.7,
-                  child: InkWell(
-                      onTap: () {
-                        print(wX);
-                        print(weatherIcon);
-                      },
-                      child: Image.asset(weatherIcon)))),
+                  widthFactor: 0.7, child: Image.asset(weatherIcon))),
         ],
       ),
     );
@@ -377,7 +432,7 @@ class _HomePageState extends State<HomePage>
 
   PreferredSizeWidget _buildAppBarBottom(bool isSearching) {
     return PreferredSize(
-      preferredSize: Size.fromHeight(kToolbarHeight),
+      preferredSize: Size.fromHeight(kToolbarHeight - 20),
       child: Container(
         height: appBarBottomHeight,
         padding: EdgeInsets.only(left: 150),

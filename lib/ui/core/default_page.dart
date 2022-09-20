@@ -40,6 +40,8 @@ class _DefaultPageState extends State<DefaultPage> {
             backgroundColor: defaultBackgroundColor,
             resizeToAvoidBottomInset: false,
             bottomNavigationBar: _buildBottomNavigationBar(routeData),
+
+            drawer: Drawer(),
             body: Container(
               child: _contentPage(routeData),
             ),

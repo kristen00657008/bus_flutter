@@ -3,6 +3,7 @@ import 'package:bus/bloc/system/application_bloc.dart';
 import 'package:bus/http/weather/weather_repository.dart';
 import 'package:bus/route/base_bloc.dart';
 import 'package:bus/route/page_bloc.dart';
+import 'package:bus/util/debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -28,9 +29,18 @@ class HomePageBloc extends PageBloc {
 
   Stream<WeatherBean> get weatherBeanStream => _weatherBeanSubject.stream;
 
+  /// 搜尋文字流
+  final BehaviorSubject<String> _searchTextSubject = BehaviorSubject.seeded("");
+
+  Stream<String> get searchTextStream => _searchTextSubject.stream;
+
   double get expandHeight => _expandHeightAnimation.value;
 
   double get appBarHeight => _appBarHeightAnimation.value;
+
+  late TextEditingController searchController;
+
+  final debounce = Debounce(milliseconds: 500);
 
   void init(TickerProvider tickerProvider) {
     ApplicationBloc.getInstance().getLocate().then((_) {
@@ -43,6 +53,8 @@ class HomePageBloc extends PageBloc {
         Tween<double>(begin: 200.0, end: 0).animate(controller);
     _appBarHeightAnimation =
         Tween<double>(begin: kToolbarHeight, end: 0).animate(controller);
+
+    searchController = TextEditingController();
   }
 
   void setCity(String city) {
@@ -50,7 +62,9 @@ class HomePageBloc extends PageBloc {
   }
 
   void getWeather() {
-    _weatherRepository.getWeather(ApplicationBloc.getInstance().currentCity).listen((event) {
+    _weatherRepository
+        .getWeather(ApplicationBloc.getInstance().currentCity)
+        .listen((event) {
       _weatherBeanSubject.add(event);
     });
   }
@@ -65,6 +79,15 @@ class HomePageBloc extends PageBloc {
 
   void changeToHomePage() {
     controller.reverse();
+  }
+
+  void searchTextChange(String text) {
+    _searchTextSubject.add(text);
+  }
+
+  void searchTextClear() {
+    searchTextChange("");
+    searchController.clear();
   }
 
   @override
