@@ -39,8 +39,15 @@ class _DefaultPageState extends State<DefaultPage> {
           return Scaffold(
             backgroundColor: defaultBackgroundColor,
             resizeToAvoidBottomInset: false,
-            bottomNavigationBar: _buildBottomNavigationBar(routeData),
-
+            bottomNavigationBar: StreamBuilder<bool>(
+                stream: bloc.isShowBottomStream,
+                initialData: true,
+                builder: (context, snapshot) {
+                  if (snapshot.requireData) {
+                    return _buildBottomNavigationBar(routeData);
+                  }
+                  return SizedBox();
+                }),
             drawer: Drawer(),
             body: Container(
               child: _contentPage(routeData),
@@ -81,7 +88,7 @@ class _DefaultPageState extends State<DefaultPage> {
               url = PageName.SettingPage;
               break;
           }
-          if(url.isNotEmpty) {
+          if (url.isNotEmpty) {
             bloc.setSubPage(url);
           }
         });

@@ -19,10 +19,7 @@ class BottomNavigationData {
 
 enum BottomNavigationEnum {
   homePage,
-
   locationPage,
-
   mrtPage,
-
   settingPage,
 }

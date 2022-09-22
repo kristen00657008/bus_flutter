@@ -52,6 +52,10 @@ dependencies:
   # 位置
   geolocator: ^9.0.1
 
+  # Date Format
+  intl: ^0.17.0
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

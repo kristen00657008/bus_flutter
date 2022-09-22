@@ -3,11 +3,18 @@ import 'package:bus/model/system/bottom_navigation_data.dart';
 import 'package:bus/route/base_bloc.dart';
 import 'package:bus/route/page_bloc.dart';
 import 'package:bus/route/page_name.dart';
+import 'package:rxdart/rxdart.dart';
 
 class DefaultPageBloc extends PageBloc {
   DefaultPageBloc(BlocOption blocOption) : super(blocOption);
 
   String currentCity = "";
+
+  /// 底部導覽列顯示流
+  final BehaviorSubject<bool> _isShowBottomSubject =
+      BehaviorSubject.seeded(true);
+
+  Stream<bool> get isShowBottomStream => _isShowBottomSubject.stream;
 
   List<BottomNavigationData> bottomNavigationList = [
     BottomNavigationData(
@@ -32,7 +39,7 @@ class DefaultPageBloc extends PageBloc {
         url: PageName.SettingPage)
   ];
 
-
-
-
+  void setIsShowBottomNavigation(bool isShow) {
+    _isShowBottomSubject.add(isShow);
+  }
 }

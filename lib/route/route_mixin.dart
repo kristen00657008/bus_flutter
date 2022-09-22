@@ -2,14 +2,12 @@ import 'package:bus/bloc/core/home_page_bloc.dart';
 import 'package:bus/bloc/core/location_page_bloc.dart';
 import 'package:bus/bloc/core/mrt_page_bloc.dart';
 import 'package:bus/bloc/core/setting_page_bloc.dart';
-import 'package:bus/bloc/search_page_bloc.dart';
 import 'package:bus/bloc/system/default_page_bloc.dart';
 import 'package:bus/ui/core/default_page.dart';
 import 'package:bus/ui/core/home_page.dart';
 import 'package:bus/ui/core/location_page.dart';
 import 'package:bus/ui/core/mrt_page.dart';
 import 'package:bus/ui/core/setting_page.dart';
-import 'package:bus/ui/search_page.dart';
 import 'package:flutter/material.dart';
 import 'package:bus/route/base_bloc.dart';
 import 'package:bus/route/page_name.dart';
@@ -87,9 +85,6 @@ mixin RouteMixin {
       case PageName.SettingPage:
         return BlocProvider(
             bloc: SettingPageBloc(BlocOption(query)), child: SettingPage());
-      case PageName.SearchPage:
-        return BlocProvider(
-            bloc: SearchPageBloc(BlocOption(query)), child: SearchPage());
       default:
         throw ("RouteMixin 無找到對應Page");
     }

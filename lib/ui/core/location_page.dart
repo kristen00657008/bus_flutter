@@ -21,7 +21,10 @@ class _LocationPageState extends State<LocationPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(widget.toString(),style: TextStyle(color: Colors.white),),
+      child: Text(
+        widget.toString(),
+        style: TextStyle(color: Colors.white),
+      ),
     );
   }
 }

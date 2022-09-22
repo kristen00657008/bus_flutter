@@ -1,5 +1,6 @@
 import 'package:bus/bean/weather/weather_bean.dart';
 import 'package:bus/bloc/system/application_bloc.dart';
+import 'package:bus/bloc/system/default_page_bloc.dart';
 import 'package:bus/http/weather/weather_repository.dart';
 import 'package:bus/resource/city_data.dart';
 import 'package:bus/resource/colors.dart';
@@ -17,6 +18,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late HomePageBloc bloc;
+  late DefaultPageBloc defaultPageBloc;
+
   final double appBarBottomHeight = 35;
   final _tabs = const [
     "Tab 1",
@@ -28,6 +31,8 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     bloc = BlocProvider.of<HomePageBloc>(context);
+    defaultPageBloc = BlocProvider.of<DefaultPageBloc>(context);
+
     bloc.init(this);
     bloc.controller.addListener(() {
       setState(() {});
@@ -51,12 +56,7 @@ class _HomePageState extends State<HomePage>
                   ];
                 },
                 body: isSearching
-                    ? Center(
-                        child: Text(
-                          "IsSearching",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      )
+                    ? _buildSearchList()
                     : TabBarView(
                         children: _tabs.map((String tabName) {
                           return CustomScrollView(
@@ -92,7 +92,7 @@ class _HomePageState extends State<HomePage>
         automaticallyImplyLeading: false,
         actions: [
           AnimatedContainer(
-            duration: Duration(milliseconds: 200),
+            duration: Duration(milliseconds: 500),
             width: isSearching ? 70 : 0,
             child: isSearching
                 ? TextButton(
@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage>
                     onPressed: () {
                       bloc.changeToHomePage();
                       bloc.setIsSearching(false);
+                      defaultPageBloc.setIsShowBottomNavigation(true);
                       bloc.searchTextClear();
                     },
                   )
@@ -125,25 +126,24 @@ class _HomePageState extends State<HomePage>
       child: Row(
         children: [
           AnimatedContainer(
-            duration: Duration(milliseconds: 200),
+            duration: Duration(milliseconds: 500),
             width: isSearching ? 0 : 70,
-            child: (isSearching || bloc.controller.isAnimating)
-                ? Container()
-                : IconButton(
-                    icon: Icon(
-                      Icons.menu,
-                      size: 35,
-                    ),
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                  ),
+            child: IconButton(
+              icon: Icon(
+                Icons.menu,
+                size: 35,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            ),
           ),
           Expanded(
             child: InkWell(
               onTap: () {
                 bloc.setIsSearching(true);
                 bloc.changeToSearching();
+                defaultPageBloc.setIsShowBottomNavigation(false);
               },
               child: TextField(
                 controller: bloc.searchController,
@@ -396,9 +396,9 @@ class _HomePageState extends State<HomePage>
                         child: PopupMenuButton(
                           itemBuilder: (context) => cities
                               .map((city) => PopupMenuItem<String>(
-                                    value: city,
+                                    value: city.chineseName,
                                     child: Text(
-                                      city,
+                                      city.chineseName,
                                       style: TextStyle(
                                         fontSize: 15,
                                         color: buttonDisableColor,
@@ -448,6 +448,24 @@ class _HomePageState extends State<HomePage>
                     .toList(),
               ),
       ),
+    );
+  }
+
+  Widget _buildSearchList() {
+    return MediaQuery.removePadding(
+      removeTop: true,
+      context: context,
+      child: ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: 20,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(
+                index.toString(),
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          }),
     );
   }
 

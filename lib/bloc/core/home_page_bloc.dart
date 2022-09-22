@@ -1,5 +1,7 @@
+import 'package:bus/bean/bus/route_bean/route_bean.dart';
 import 'package:bus/bean/weather/weather_bean.dart';
 import 'package:bus/bloc/system/application_bloc.dart';
+import 'package:bus/http/bus/bus_repository.dart';
 import 'package:bus/http/weather/weather_repository.dart';
 import 'package:bus/route/base_bloc.dart';
 import 'package:bus/route/page_bloc.dart';
@@ -11,6 +13,8 @@ class HomePageBloc extends PageBloc {
   HomePageBloc(BlocOption blocOption) : super(blocOption);
 
   final WeatherRepository _weatherRepository = WeatherRepository();
+
+  final BusRepository _busRepository = BusRepository();
 
   late AnimationController controller;
 
@@ -33,6 +37,11 @@ class HomePageBloc extends PageBloc {
   final BehaviorSubject<String> _searchTextSubject = BehaviorSubject.seeded("");
 
   Stream<String> get searchTextStream => _searchTextSubject.stream;
+
+  /// 公車路線流
+  final BehaviorSubject<RouteBean> _routeBeanSubject = BehaviorSubject();
+
+  Stream<RouteBean> get routeBeanStream => _routeBeanSubject.stream;
 
   double get expandHeight => _expandHeightAnimation.value;
 
@@ -90,8 +99,12 @@ class HomePageBloc extends PageBloc {
     searchController.clear();
   }
 
-  @override
-  void dispose() {
-    controller.dispose();
+  void getRouteData(String routeName, String city) {
+    _busRepository.getRouteData(routeName, city).listen((event) {
+      _routeBeanSubject.add(event);
+    });
   }
+
+  @override
+  void dispose() {}
 }

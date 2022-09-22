@@ -78,35 +78,32 @@ class ApplicationBloc with RouteMixin {
     return await Geolocator.getCurrentPosition();
   }
 
-  Future<void> getLocate() async{
+  Future<void> getLocate() async {
     await determinePosition().then((value) {
-       currentCity = getCurrentCity(value.latitude, value.longitude);
+      currentCity = getCurrentCity(value.latitude, value.longitude);
     });
   }
 
   String getCurrentCity(double currentLat, double currentLon) {
-      var p = 0.017453292519943295;
-      var c = cos;
-      var cityIndex = 0;
-      var minDistance = double.maxFinite;
+    var p = 0.017453292519943295;
+    var c = cos;
+    var cityIndex = 0;
+    var minDistance = double.maxFinite;
 
-      locates.asMap().forEach((index, locate) {
-        var lat = double.parse(locate.lat);
-        var lon = double.parse(locate.lon);
+    locates.asMap().forEach((index, locate) {
+      var lat = double.parse(locate.lat);
+      var lon = double.parse(locate.lon);
 
-        var a = 0.5 -
-            c((lat - currentLat) * p) / 2 +
-            c(currentLat * p) *
-                c(lat * p) *
-                (1 - c((lon - currentLon) * p)) /
-                2;
-        var distance = 12742 * asin(sqrt(a));
-        if (distance < minDistance) {
-          minDistance = distance;
-          cityIndex = index;
-        }
-      });
-      return cities[cityIndex];
+      var a = 0.5 -
+          c((lat - currentLat) * p) / 2 +
+          c(currentLat * p) * c(lat * p) * (1 - c((lon - currentLon) * p)) / 2;
+      var distance = 12742 * asin(sqrt(a));
+      if (distance < minDistance) {
+        minDistance = distance;
+        cityIndex = index;
+      }
+    });
+    return cities[cityIndex];
   }
 
   /// 關閉
