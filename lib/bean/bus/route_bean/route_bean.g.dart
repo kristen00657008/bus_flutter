@@ -31,7 +31,7 @@ RouteBean _$RouteBeanFromJson(Map<String, dynamic> json) => RouteBean(
       city: json['City'] as String? ?? '',
       cityCode: json['CityCode'] as String? ?? '',
       updateTime: json['UpdateTime'] as String? ?? '',
-      versionID: json['VersionID'] as String? ?? '',
+      versionID: json['VersionID'] as int? ?? 0,
     );
 
 Map<String, dynamic> _$RouteBeanToJson(RouteBean instance) => <String, dynamic>{
@@ -85,7 +85,7 @@ SubRouteBean _$SubRouteBeanFromJson(Map<String, dynamic> json) => SubRouteBean(
       subRouteUID: json['SubRouteUID'] as String? ?? '',
       subRouteID: json['SubRouteID'] as String? ?? '',
       operatorIDs: (json['OperatorIDs'] as List<dynamic>?)
-              ?.map((e) => e as int)
+              ?.map((e) => e as String)
               .toList() ??
           [],
       subRouteName: SubRouteNameBean.fromJson(

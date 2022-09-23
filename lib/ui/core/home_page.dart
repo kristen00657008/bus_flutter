@@ -1,12 +1,16 @@
+import 'package:bus/bean/bus/route_bean/route_bean.dart';
 import 'package:bus/bean/weather/weather_bean.dart';
 import 'package:bus/bloc/system/application_bloc.dart';
 import 'package:bus/bloc/system/default_page_bloc.dart';
 import 'package:bus/http/weather/weather_repository.dart';
 import 'package:bus/resource/city_data.dart';
 import 'package:bus/resource/colors.dart';
+import 'package:bus/route/page_name.dart';
+import 'package:bus/route/route_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:bus/bloc/core/home_page_bloc.dart';
 import 'package:bus/route/base_bloc.dart';
+import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -32,7 +36,8 @@ class _HomePageState extends State<HomePage>
     super.initState();
     bloc = BlocProvider.of<HomePageBloc>(context);
     defaultPageBloc = BlocProvider.of<DefaultPageBloc>(context);
-
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
     bloc.init(this);
     bloc.controller.addListener(() {
       setState(() {});
@@ -58,24 +63,25 @@ class _HomePageState extends State<HomePage>
                 body: isSearching
                     ? _buildSearchList()
                     : TabBarView(
-                        children: _tabs.map((String tabName) {
-                          return CustomScrollView(
-                            slivers: <Widget>[
-                              SliverFixedExtentList(
-                                itemExtent: 48.0,
-                                delegate: SliverChildBuilderDelegate(
-                                  (BuildContext context, int index) => ListTile(
-                                      title: Text(
-                                    '$tabName Item $index',
-                                    style: TextStyle(color: Colors.white),
-                                  )),
-                                  childCount: 30,
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ));
+                  children: _tabs.map((String tabName) {
+                    return CustomScrollView(
+                      slivers: <Widget>[
+                        SliverFixedExtentList(
+                          itemExtent: 48.0,
+                          delegate: SliverChildBuilderDelegate(
+                                (BuildContext context, int index) =>
+                                ListTile(
+                                    title: Text(
+                                      '$tabName Item $index',
+                                      style: TextStyle(color: Colors.white),
+                                    )),
+                            childCount: 30,
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ));
           }),
     );
   }
@@ -96,18 +102,18 @@ class _HomePageState extends State<HomePage>
             width: isSearching ? 70 : 0,
             child: isSearching
                 ? TextButton(
-                    child: Text(
-                      "取消",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onPressed: () {
-                      bloc.changeToHomePage();
-                      bloc.setIsSearching(false);
-                      defaultPageBloc.setIsShowBottomNavigation(true);
-                      bloc.searchTextClear();
-                    },
-                  )
+              child: Text(
+                "取消",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+                overflow: TextOverflow.ellipsis,
+              ),
+              onPressed: () {
+                bloc.changeToHomePage();
+                bloc.setIsSearching(false);
+                defaultPageBloc.setIsShowBottomNavigation(true);
+                bloc.searchTextClear();
+              },
+            )
                 : Container(),
           ),
         ],
@@ -192,9 +198,7 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
                 onChanged: (text) {
-                  bloc.debounce.run(() {
-                    bloc.searchTextChange(text);
-                  });
+                  bloc.searchTextChange(text);
                 },
               ),
             ),
@@ -270,7 +274,10 @@ class _HomePageState extends State<HomePage>
         break;
     }
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.48,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width * 0.48,
       child: Row(
         children: [
           Expanded(
@@ -337,16 +344,19 @@ class _HomePageState extends State<HomePage>
         : "——";
     final cT = weatherData != null
         ? minCT == maxCT
-            ? minCT
-            : minCT + "至" + maxCT
+        ? minCT
+        : minCT + "至" + maxCT
         : "——";
     final poP12h = weatherData != null
         ? "降雨 " +
-            weatherData.weatherElementList[0].time[0].elementValue.last.value +
-            "%"
+        weatherData.weatherElementList[0].time[0].elementValue.last.value +
+        "%"
         : "降雨 ——%";
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.52,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width * 0.52,
       child: Row(
         children: [
           Column(
@@ -394,8 +404,10 @@ class _HomePageState extends State<HomePage>
                       ),
                       Expanded(
                         child: PopupMenuButton(
-                          itemBuilder: (context) => cities
-                              .map((city) => PopupMenuItem<String>(
+                          itemBuilder: (context) =>
+                              cities
+                                  .map((city) =>
+                                  PopupMenuItem<String>(
                                     value: city.chineseName,
                                     child: Text(
                                       city.chineseName,
@@ -405,9 +417,11 @@ class _HomePageState extends State<HomePage>
                                       ),
                                     ),
                                   ))
-                              .toList(),
+                                  .toList(),
                           child: Text(
-                            ApplicationBloc.getInstance().currentCity,
+                            ApplicationBloc
+                                .getInstance()
+                                .currentCity,
                             style: TextStyle(
                               fontSize: 12,
                               color: buttonDisableColor,
@@ -439,14 +453,15 @@ class _HomePageState extends State<HomePage>
         child: isSearching
             ? Container()
             : TabBar(
-                indicatorWeight: 3,
-                indicatorColor: Colors.white,
-                tabs: _tabs
-                    .map((String tabName) => Tab(
-                          text: tabName,
-                        ))
-                    .toList(),
-              ),
+          indicatorWeight: 3,
+          indicatorColor: Colors.white,
+          tabs: _tabs
+              .map((String tabName) =>
+              Tab(
+                text: tabName,
+              ))
+              .toList(),
+        ),
       ),
     );
   }
@@ -455,15 +470,48 @@ class _HomePageState extends State<HomePage>
     return MediaQuery.removePadding(
       removeTop: true,
       context: context,
-      child: ListView.builder(
-          padding: EdgeInsets.zero,
-          itemCount: 20,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(
-                index.toString(),
-                style: TextStyle(color: Colors.white),
-              ),
+      child: StreamBuilder<List<RouteBean>>(
+          stream: bloc.routeBeanStream,
+          initialData: const [],
+          builder: (context, snapshot) {
+            var routes = snapshot.requireData;
+            return ListView.separated(
+              // shrinkWrap: true,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.zero,
+              itemCount: routes.length,
+              separatorBuilder: (BuildContext context, int index) {
+                return Divider(
+                  height: 1,
+                  color: Colors.grey,
+                );
+              },
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(
+                    routes[index].subRoutes.first.subRouteName.tw +
+                        routes[index].subRoutes.first.headSign,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    routes[index].departureStopNameZh +
+                        " - " +
+                        routes[index].destinationStopNameZh,
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  trailing: Icon(
+                    Icons.keyboard_arrow_right,
+                    color: Colors.grey,
+                  ),
+                  visualDensity: VisualDensity(vertical: -3.5),
+                  onTap: () {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    Future.delayed(Duration(milliseconds: 200), () {
+                      bloc.pushPage(PageName.BusRoutePage, context, transitionEnum: TransitionEnum.rightLeft);
+                    });
+                  },
+                );
+              },
             );
           }),
     );

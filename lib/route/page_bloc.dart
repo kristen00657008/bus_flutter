@@ -36,13 +36,13 @@ class PageBloc implements BaseBloc {
     BuildContext context, {
     bool replaceCurrent = false,
     Map<String, dynamic> blocQuery = const {},
-    TransitionEnum trasitionEunm = TransitionEnum.normal,
+    TransitionEnum transitionEnum = TransitionEnum.normal,
   }) {
     ApplicationBloc.getInstance().pushPage(
         route,
         context,
         blocQuery: blocQuery,
-        transitionEnum: trasitionEunm
+        transitionEnum: transitionEnum
     );
   }
 

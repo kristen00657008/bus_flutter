@@ -17,3 +17,7 @@ const buttonDisableColor = Color.fromARGB(255, 124, 128, 128);
 const whiteColor = Color.fromARGB(255, 218, 236, 237);
 
 const buttonWhiteColor = Color.fromARGB(255, 120, 195, 195);
+
+const routeBarColor1 = Color.fromARGB(255, 31, 168, 140);
+
+const routeBarColor2 = Color.fromARGB(255, 22, 158, 147);

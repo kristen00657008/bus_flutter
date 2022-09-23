@@ -1,8 +1,10 @@
+import 'package:bus/bloc/bus_route_page_bloc.dart';
 import 'package:bus/bloc/core/home_page_bloc.dart';
 import 'package:bus/bloc/core/location_page_bloc.dart';
 import 'package:bus/bloc/core/mrt_page_bloc.dart';
 import 'package:bus/bloc/core/setting_page_bloc.dart';
 import 'package:bus/bloc/system/default_page_bloc.dart';
+import 'package:bus/ui/bus_route_page.dart';
 import 'package:bus/ui/core/default_page.dart';
 import 'package:bus/ui/core/home_page.dart';
 import 'package:bus/ui/core/location_page.dart';
@@ -21,7 +23,7 @@ mixin RouteMixin {
     TransitionEnum transitionEnum = TransitionEnum.normal,
     bool pushAndReplace = false,
   }) async {
-    var navigator = Navigator.of(context);
+    // var navigator = Navigator.of(context);
     var pageWidget = _getPage(routeName, blocQuery);
 
     var pageRoute = MaterialPageRoute<T>(
@@ -38,22 +40,23 @@ mixin RouteMixin {
     var rightLeftRoute = PageTransition(
       settings: RouteSettings(name: routeName),
       type: PageTransitionType.rightToLeft,
+      duration: Duration(milliseconds: 350),
       child: pageWidget,
     );
 
     switch (transitionEnum) {
       case TransitionEnum.normal:
         if (pushAndReplace) {
-          navigator.pushReplacement(pageRoute);
+          Navigator.pushReplacement(context, pageRoute);
         } else {
-          navigator.push(pageRoute);
+          Navigator.push(context, pageRoute);
         }
         break;
       case TransitionEnum.bottomTop:
-        navigator.push(bottomToTopRoute);
+        Navigator.push(context, bottomToTopRoute);
         break;
       case TransitionEnum.rightLeft:
-        navigator.push(rightLeftRoute);
+        Navigator.push(context, rightLeftRoute);
         break;
       default:
         throw "Transition fail";
@@ -85,6 +88,9 @@ mixin RouteMixin {
       case PageName.SettingPage:
         return BlocProvider(
             bloc: SettingPageBloc(BlocOption(query)), child: SettingPage());
+      case PageName.BusRoutePage:
+        return BlocProvider(
+            bloc: BusRoutePageBloc(BlocOption(query)), child: BusRoutePage());
       default:
         throw ("RouteMixin 無找到對應Page");
     }

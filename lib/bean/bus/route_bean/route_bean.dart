@@ -55,8 +55,8 @@ class RouteBean {
   @JsonKey(name: 'UpdateTime', defaultValue: "")
   String updateTime;
 
-  @JsonKey(name: 'VersionID', defaultValue: "")
-  String versionID;
+  @JsonKey(name: 'VersionID', defaultValue: 0)
+  int versionID;
 
   RouteBean({
     required this.routeUID,
@@ -136,7 +136,7 @@ class SubRouteBean {
   String subRouteID;
 
   @JsonKey(name: 'OperatorIDs', defaultValue: [])
-  List<int> operatorIDs;
+  List<String> operatorIDs;
 
   @JsonKey(name: 'SubRouteName', defaultValue: null)
   SubRouteNameBean subRouteName;

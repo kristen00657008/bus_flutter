@@ -55,6 +55,8 @@ dependencies:
   # Date Format
   intl: ^0.17.0
 
+  # bottom sheet
+  snapping_sheet: ^3.1.0
 
 dev_dependencies:
   flutter_test:

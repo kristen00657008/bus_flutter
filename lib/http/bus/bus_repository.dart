@@ -14,9 +14,15 @@ class BusRepository {
 
   final BusRequestService _busRequestService = BusRequestService();
 
-  Stream<RouteBean> getRouteData(String routeName, String city) {
+  Stream<List<RouteBean>> getRouteData(String routeName, String city) {
     return _busRequestService.getBusRoute(routeName, city).map((response) {
-      return RouteBean.fromJson(Map<String, dynamic>.from(response.data));
+      var result1 = response.data as List<dynamic>;
+      List<RouteBean> result2 = [];
+      for (var element in result1) {
+        result2.add(RouteBean.fromJson(Map<String, dynamic>.from(element)));
+      }
+      return result2;
+      // return RouteBean.fromJson(Map<String, dynamic>.from(response.data));
     });
   }
 }

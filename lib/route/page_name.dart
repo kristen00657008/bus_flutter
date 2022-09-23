@@ -14,4 +14,5 @@ class PageName{
 
   static const String SearchPage = "/SearchPage";
 
+  static const String BusRoutePage = "/BusRoutePage";
 }
