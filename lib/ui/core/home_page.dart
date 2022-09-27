@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage>
                   ];
                 },
                 body: isSearching
-                    ? _buildSearchList()
+                    ? _buildSearchView()
                     : TabBarView(
                   children: _tabs.map((String tabName) {
                     return CustomScrollView(
@@ -466,6 +466,19 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  Widget _buildSearchView() {
+    return StreamBuilder<bool>(
+      stream: bloc.showHistoryStream,
+      initialData: true,
+      builder: (context, snapshot) {
+          var showHistory = snapshot.requireData;
+          return showHistory
+              ? _buildHistory()
+              :_buildSearchList();
+      },
+    );
+  }
+
   Widget _buildSearchList() {
     return MediaQuery.removePadding(
       removeTop: true,
@@ -476,7 +489,7 @@ class _HomePageState extends State<HomePage>
           builder: (context, snapshot) {
             var routes = snapshot.requireData;
             return ListView.separated(
-              // shrinkWrap: true,
+              // controller: bloc.searchListController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.zero,
               itemCount: routes.length,
@@ -507,13 +520,30 @@ class _HomePageState extends State<HomePage>
                   onTap: () {
                     FocusManager.instance.primaryFocus?.unfocus();
                     Future.delayed(Duration(milliseconds: 200), () {
-                      bloc.pushPage(PageName.BusRoutePage, context, transitionEnum: TransitionEnum.rightLeft);
+                      bloc.pushPage(PageName.BusRoutePage, context,
+                          transitionEnum: TransitionEnum.rightLeft);
                     });
                   },
                 );
               },
             );
           }),
+    );
+  }
+
+  Widget _buildHistory() {
+    return ListView.separated(
+      itemCount: 0,
+      separatorBuilder: (BuildContext context, int index) {
+        return Divider(
+          height: 1,
+          color: Colors.grey,
+        );
+      },
+      itemBuilder: (context, index) {
+        return Container();
+      },
+
     );
   }
 

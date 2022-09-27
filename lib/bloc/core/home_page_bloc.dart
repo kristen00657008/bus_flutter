@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bus/bean/bus/route_bean/route_bean.dart';
 import 'package:bus/bean/weather/weather_bean.dart';
 import 'package:bus/bloc/system/application_bloc.dart';
@@ -23,11 +25,19 @@ class HomePageBloc extends PageBloc {
 
   late Animation<double> _appBarHeightAnimation;
 
+  // ScrollController searchListController = ScrollController();
+
   /// 是否在搜尋
   final BehaviorSubject<bool> _isSearchingSubject =
       BehaviorSubject.seeded(false);
 
   Stream<bool> get isSearchingStream => _isSearchingSubject.stream;
+
+  /// 是否顯示歷史紀錄
+  final BehaviorSubject<bool> _showHistorySubject =
+      BehaviorSubject.seeded(true);
+
+  Stream<bool> get showHistoryStream => _showHistorySubject.stream;
 
   /// 天氣資料流
   final BehaviorSubject<WeatherBean> _weatherBeanSubject = BehaviorSubject();
@@ -51,7 +61,7 @@ class HomePageBloc extends PageBloc {
 
   late TextEditingController searchController;
 
-  final debounce = Debounce(milliseconds: 100);
+  final debounce = Debounce(milliseconds: 400);
 
   void init(TickerProvider tickerProvider) {
     ApplicationBloc.getInstance().getLocate().then((_) {
@@ -95,10 +105,19 @@ class HomePageBloc extends PageBloc {
   void searchTextChange(String text) {
     _searchTextSubject.add(text);
     if (text.isNotEmpty) {
-      debounce.run(() {
-        getRouteData(text, cities.first.englishName);
+      _showHistorySubject.add(false);
+      debounce.run(() async {
+        List<RouteBean> allRoute = [];
+        var isFirst = true;
+        for (var city in cities) {
+          isFirst = allRoute.isEmpty;
+          allRoute.addAll(await getRouteData(text, city.englishName));
+          if(isFirst) _routeBeanSubject.add(allRoute);
+        }
+        _routeBeanSubject.add(allRoute);
       });
     } else {
+      _showHistorySubject.add(true);
       _routeBeanSubject.add([]);
     }
   }
@@ -109,10 +128,13 @@ class HomePageBloc extends PageBloc {
     _routeBeanSubject.add([]);
   }
 
-  void getRouteData(String routeName, String city) {
+  Future<List<RouteBean>> getRouteData(String routeName, String city) async {
+    var firstValueReceived = Completer<List<RouteBean>>();
     _busRepository.getRouteData(routeName, city).listen((event) {
-      _routeBeanSubject.add(sorting(routeName, event));
+      event = sorting(routeName, event);
+      firstValueReceived.complete(event);
     });
+    return firstValueReceived.future;
   }
 
   List<RouteBean> sorting(String routeName, List<RouteBean> routeData) {
