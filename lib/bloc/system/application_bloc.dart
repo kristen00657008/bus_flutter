@@ -46,6 +46,9 @@ class ApplicationBloc with RouteMixin {
     _subPageSubject.add(_subPageHistory.last);
   }
 
+  void init() {
+  }
+
   void getNeededApi() {
     getLocate().then((_) {
       print(currentCity);

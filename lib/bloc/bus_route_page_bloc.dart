@@ -1,20 +1,33 @@
+import 'package:bus/bean/bus/route_bean/route_bean.dart';
+import 'package:bus/bean/bus/stop_of_route_bean/stop_of_route_bean.dart';
+import 'package:bus/http/bus/bus_repository.dart';
 import 'package:bus/route/base_bloc.dart';
 import 'package:bus/route/page_bloc.dart';
+import 'package:bus/route/page_name.dart';
+import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:snapping_sheet/snapping_sheet.dart';
 
 class BusRoutePageBloc extends PageBloc {
   BusRoutePageBloc(BlocOption blocOption) : super(blocOption);
 
-  final snappingSheetController = SnappingSheetController();
+  final BusRepository _busRepository = BusRepository();
 
-  /// opacity
-  final BehaviorSubject<double> _opacitySubject =
-  BehaviorSubject.seeded(0);
+  RouteBean get busRoute =>
+      option.query[BlocOptionKey.BusRouteKey];
 
-  Stream<double> get opacityStream => _opacitySubject.stream;
+  late TabController controller;
 
-  void setOpacity(double opacity) {
-    _opacitySubject.add(opacity);
+  final BehaviorSubject<List<StopOfRouteBean>> _stopOfRouteSubject =
+      BehaviorSubject.seeded([]);
+
+  Stream<List<StopOfRouteBean>> get stopOfRouteStream =>
+      _stopOfRouteSubject.stream;
+
+  Future<List<StopOfRouteBean>> getStopOfRoute() {
+    return _busRepository
+        .getStopOfRoute(busRoute.routeUID, busRoute.routeName.tw, busRoute.city)
+        .firstWhere((element) {
+      return true;
+    });
   }
 }

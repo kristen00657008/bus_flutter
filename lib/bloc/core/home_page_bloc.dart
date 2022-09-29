@@ -25,7 +25,9 @@ class HomePageBloc extends PageBloc {
 
   late Animation<double> _appBarHeightAnimation;
 
-  // ScrollController searchListController = ScrollController();
+  ScrollController homePageController = ScrollController();
+
+  FocusNode searchFieldFocusNode = FocusNode();
 
   /// 是否在搜尋
   final BehaviorSubject<bool> _isSearchingSubject =
@@ -111,8 +113,8 @@ class HomePageBloc extends PageBloc {
         var isFirst = true;
         for (var city in cities) {
           isFirst = allRoute.isEmpty;
-          allRoute.addAll(await getRouteData(text, city.englishName));
-          if(isFirst) _routeBeanSubject.add(allRoute);
+          allRoute.addAll(await searchRoutes(text, city.englishName));
+          if (isFirst) _routeBeanSubject.add(allRoute);
         }
         _routeBeanSubject.add(allRoute);
       });
@@ -128,9 +130,9 @@ class HomePageBloc extends PageBloc {
     _routeBeanSubject.add([]);
   }
 
-  Future<List<RouteBean>> getRouteData(String routeName, String city) async {
+  Future<List<RouteBean>> searchRoutes(String routeName, String city) async {
     var firstValueReceived = Completer<List<RouteBean>>();
-    _busRepository.getRouteData(routeName, city).listen((event) {
+    _busRepository.getRoute(routeName, city).listen((event) {
       event = sorting(routeName, event);
       firstValueReceived.complete(event);
     });
@@ -139,9 +141,40 @@ class HomePageBloc extends PageBloc {
 
   List<RouteBean> sorting(String routeName, List<RouteBean> routeData) {
     routeData.sort((a, b) {
-      return a.subRoutes.first.subRouteName.tw.startsWith(routeName) ? -1 : 1;
+      var aValue = parseIntPrefix(a.routeName.tw);
+      var bValue = parseIntPrefix(b.routeName.tw);
+      if (aValue != null && bValue != null) {
+        if(a.routeName.tw.startsWith(routeName) ) {
+          return aValue - bValue;
+        } else {
+          return 0;
+        }
+
+      }
+
+      if (aValue == null && bValue == null) {
+        // If neither string has an integer prefix, sort the strings lexically.
+        return a.routeName.tw.compareTo(b.routeName.tw);
+      }
+
+      // Sort strings with integer prefixes before strings without.
+      if (aValue == null) {
+        return 1;
+      } else {
+        return -1;
+      }
     });
+
     return routeData;
+  }
+
+  int? parseIntPrefix(String s) {
+    var re = RegExp(r'(-?[0-9]+).*');
+    var match = re.firstMatch(s);
+    if (match == null) {
+      return null;
+    }
+    return int.parse(match.group(1)!);
   }
 
   @override

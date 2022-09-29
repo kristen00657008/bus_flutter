@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -8,26 +10,10 @@ class BusRequestService {
   final baseUrl = "https://ptx.transportdata.tw/MOTC/v2/Bus/";
   final String appId = "e329c82e8e4d4570a965c94793f43cc3";
   final String appKey = "Z8FNUWcoYOIldYjv7P8ELjNrPLQ";
-  final category = "Route/";
 
-  // Future<Response> getAccessToken() async {
-  //   String xDate = getTimeString();
-  //   Dio dio = Dio();
-  //   var formData = FormData.fromMap({
-  //     'Authorization': getAuthorization(xDate),
-  //     'x-date': xDate,
-  //   });
-  //   dio.options.baseUrl =
-  //   'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
-  //   return await dio.post('/info',
-  //       data: formData,
-  //       options: Options(
-  //         contentType: 'application/x-www-form-urlencoded',
-  //         // headers: {
-  //         //   'content-type': 'application/x-www-form-urlencoded'
-  //         // }
-  //       ));
-  // }
+  final Dio _dio = Dio();
+
+  Dio get dio => _dio;
 
   String getAuthorization(String xDate) {
     String time = getTimeString();
@@ -47,16 +33,32 @@ class BusRequestService {
         " GMT";
   }
 
-  Stream<Response> getBusRoute(String routeName, String city) {
-    Dio dio = Dio();
+  void addHeader() {
     String xDate = getTimeString();
     dio.options.headers["Authorization"] = getAuthorization(xDate);
     dio.options.headers["x-date"] = xDate;
     dio.options.headers["Accept-Encoding"] = 'gzip';
+  }
 
-    city = "City/" + city + "/";
+  Stream<Response> getRoute(String routeName, String city) {
+    addHeader();
+    print(Category.Route.toString());
+    city = "/City/$city/";
     return dio
-        .get(baseUrl + category + city + routeName + "?%24format=JSON")
+        .get(baseUrl + Category.Route.name + city + routeName + "?%24format=JSON")
         .asStream();
   }
+
+  Stream<Response> getStopOfRoute(String routeID, String city) {
+    addHeader();
+    city = "/City/$city/";
+    print(baseUrl + Category.StopOfRoute.name + city + routeID + "?%24format=JSON");
+    return dio
+        .get(baseUrl + Category.StopOfRoute.name + city + routeID + "?%24format=JSON")
+        .asStream();
+  }
+}
+enum Category{
+  Route,
+  StopOfRoute,
 }

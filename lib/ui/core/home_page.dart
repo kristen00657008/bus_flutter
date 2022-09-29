@@ -54,6 +54,7 @@ class _HomePageState extends State<HomePage>
           builder: (context, snapshot) {
             var isSearching = snapshot.requireData;
             return NestedScrollView(
+                controller: bloc.homePageController,
                 headerSliverBuilder:
                     (BuildContext context, bool innerBoxIsScrolled) {
                   return <Widget>[
@@ -63,25 +64,25 @@ class _HomePageState extends State<HomePage>
                 body: isSearching
                     ? _buildSearchView()
                     : TabBarView(
-                  children: _tabs.map((String tabName) {
-                    return CustomScrollView(
-                      slivers: <Widget>[
-                        SliverFixedExtentList(
-                          itemExtent: 48.0,
-                          delegate: SliverChildBuilderDelegate(
-                                (BuildContext context, int index) =>
-                                ListTile(
-                                    title: Text(
-                                      '$tabName Item $index',
-                                      style: TextStyle(color: Colors.white),
-                                    )),
-                            childCount: 30,
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ));
+                        children: _tabs.map((String tabName) {
+                          return CustomScrollView(
+                            slivers: <Widget>[
+                              SliverFixedExtentList(
+                                itemExtent: 48.0,
+                                delegate: SliverChildBuilderDelegate(
+                                  (BuildContext context, int index) =>
+                                      ListTile(
+                                          title: Text(
+                                    '$tabName Item $index',
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                                  childCount: 30,
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ));
           }),
     );
   }
@@ -102,18 +103,19 @@ class _HomePageState extends State<HomePage>
             width: isSearching ? 70 : 0,
             child: isSearching
                 ? TextButton(
-              child: Text(
-                "取消",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-                overflow: TextOverflow.ellipsis,
-              ),
-              onPressed: () {
-                bloc.changeToHomePage();
-                bloc.setIsSearching(false);
-                defaultPageBloc.setIsShowBottomNavigation(true);
-                bloc.searchTextClear();
-              },
-            )
+                    child: Text(
+                      "取消",
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onPressed: () {
+                      bloc.changeToHomePage();
+                      bloc.setIsSearching(false);
+                      defaultPageBloc.setIsShowBottomNavigation(true);
+                      bloc.searchTextClear();
+                      bloc.homePageController.jumpTo(0);
+                    },
+                  )
                 : Container(),
           ),
         ],
@@ -153,6 +155,7 @@ class _HomePageState extends State<HomePage>
               },
               child: TextField(
                 controller: bloc.searchController,
+                focusNode: bloc.searchFieldFocusNode,
                 textAlign: isSearching ? TextAlign.start : TextAlign.center,
                 style: TextStyle(color: whiteColor, fontSize: 18),
                 enabled: isSearching ? true : false,
@@ -173,6 +176,7 @@ class _HomePageState extends State<HomePage>
                           child: InkWell(
                             onTap: () {
                               bloc.searchTextClear();
+                              bloc.searchFieldFocusNode.requestFocus();
                             },
                             splashFactory: NoSplash.splashFactory,
                             child: Container(
@@ -274,10 +278,7 @@ class _HomePageState extends State<HomePage>
         break;
     }
     return SizedBox(
-      width: MediaQuery
-          .of(context)
-          .size
-          .width * 0.48,
+      width: MediaQuery.of(context).size.width * 0.48,
       child: Row(
         children: [
           Expanded(
@@ -344,19 +345,16 @@ class _HomePageState extends State<HomePage>
         : "——";
     final cT = weatherData != null
         ? minCT == maxCT
-        ? minCT
-        : minCT + "至" + maxCT
+            ? minCT
+            : minCT + "至" + maxCT
         : "——";
     final poP12h = weatherData != null
         ? "降雨 " +
-        weatherData.weatherElementList[0].time[0].elementValue.last.value +
-        "%"
+            weatherData.weatherElementList[0].time[0].elementValue.last.value +
+            "%"
         : "降雨 ——%";
     return SizedBox(
-      width: MediaQuery
-          .of(context)
-          .size
-          .width * 0.52,
+      width: MediaQuery.of(context).size.width * 0.52,
       child: Row(
         children: [
           Column(
@@ -404,10 +402,8 @@ class _HomePageState extends State<HomePage>
                       ),
                       Expanded(
                         child: PopupMenuButton(
-                          itemBuilder: (context) =>
-                              cities
-                                  .map((city) =>
-                                  PopupMenuItem<String>(
+                          itemBuilder: (context) => cities
+                              .map((city) => PopupMenuItem<String>(
                                     value: city.chineseName,
                                     child: Text(
                                       city.chineseName,
@@ -417,11 +413,9 @@ class _HomePageState extends State<HomePage>
                                       ),
                                     ),
                                   ))
-                                  .toList(),
+                              .toList(),
                           child: Text(
-                            ApplicationBloc
-                                .getInstance()
-                                .currentCity,
+                            ApplicationBloc.getInstance().currentCity,
                             style: TextStyle(
                               fontSize: 12,
                               color: buttonDisableColor,
@@ -453,15 +447,14 @@ class _HomePageState extends State<HomePage>
         child: isSearching
             ? Container()
             : TabBar(
-          indicatorWeight: 3,
-          indicatorColor: Colors.white,
-          tabs: _tabs
-              .map((String tabName) =>
-              Tab(
-                text: tabName,
-              ))
-              .toList(),
-        ),
+                indicatorWeight: 3,
+                indicatorColor: Colors.white,
+                tabs: _tabs
+                    .map((String tabName) => Tab(
+                          text: tabName,
+                        ))
+                    .toList(),
+              ),
       ),
     );
   }
@@ -471,10 +464,8 @@ class _HomePageState extends State<HomePage>
       stream: bloc.showHistoryStream,
       initialData: true,
       builder: (context, snapshot) {
-          var showHistory = snapshot.requireData;
-          return showHistory
-              ? _buildHistory()
-              :_buildSearchList();
+        var showHistory = snapshot.requireData;
+        return showHistory ? _buildHistory() : _buildSearchList();
       },
     );
   }
@@ -488,62 +479,79 @@ class _HomePageState extends State<HomePage>
           initialData: const [],
           builder: (context, snapshot) {
             var routes = snapshot.requireData;
-            return ListView.separated(
-              // controller: bloc.searchListController,
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.zero,
-              itemCount: routes.length,
-              separatorBuilder: (BuildContext context, int index) {
-                return Divider(
-                  height: 1,
-                  color: Colors.grey,
-                );
-              },
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(
-                    routes[index].subRoutes.first.subRouteName.tw +
-                        routes[index].subRoutes.first.headSign,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    routes[index].departureStopNameZh +
-                        " - " +
-                        routes[index].destinationStopNameZh,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  trailing: Icon(
-                    Icons.keyboard_arrow_right,
+            return Container(
+              color: secondBackgroundColor,
+              child: ListView.separated(
+                // controller: bloc.searchListController,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.zero,
+                itemCount: routes.length,
+                separatorBuilder: (BuildContext context, int index) {
+                  return Divider(
+                    height: 1,
                     color: Colors.grey,
-                  ),
-                  visualDensity: VisualDensity(vertical: -3.5),
-                  onTap: () {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    Future.delayed(Duration(milliseconds: 200), () {
-                      bloc.pushPage(PageName.BusRoutePage, context,
-                          transitionEnum: TransitionEnum.rightLeft);
-                    });
-                  },
-                );
-              },
+                  );
+                },
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(
+                      routes[index].subRoutes.first.subRouteName.tw,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      routes[index].departureStopNameZh +
+                          " - " +
+                          routes[index].destinationStopNameZh,
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    trailing: Icon(
+                      Icons.keyboard_arrow_right,
+                      color: Colors.grey,
+                    ),
+                    visualDensity: VisualDensity(vertical: -3.5),
+                    onTap: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      Future.delayed(Duration(milliseconds: 200), () {
+                        bloc.pushPage(PageName.BusRoutePage, context,
+                            transitionEnum: TransitionEnum.rightLeft,
+                            blocQuery: {
+                              BlocOptionKey.BusRouteKey: routes[index],
+                            });
+                      });
+                    },
+                  );
+                },
+              ),
             );
           }),
     );
   }
 
-  Widget _buildHistory() {
-    return ListView.separated(
-      itemCount: 0,
-      separatorBuilder: (BuildContext context, int index) {
-        return Divider(
-          height: 1,
-          color: Colors.grey,
-        );
-      },
-      itemBuilder: (context, index) {
-        return Container();
-      },
+  int? parseIntPrefix(String s) {
+    var re = RegExp(r'(-?[0-9]+).*');
+    var match = re.firstMatch(s);
+    if (match == null) {
+      return null;
+    }
+    return int.parse(match.group(1)!);
+  }
 
+  Widget _buildHistory() {
+    return Container(
+      color: secondBackgroundColor,
+      child: ListView.separated(
+        itemCount: 0,
+        separatorBuilder: (BuildContext context, int index) {
+          return Divider(
+            height: 1,
+            color: Colors.grey,
+          );
+        },
+        itemBuilder: (context, index) {
+          return Container();
+        },
+      ),
     );
   }
 

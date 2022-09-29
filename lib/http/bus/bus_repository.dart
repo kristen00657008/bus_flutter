@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:bus/bean/bus/route_bean/route_bean.dart';
+import 'package:bus/bean/bus/stop_of_route_bean/stop_of_route_bean.dart';
 import 'package:bus/http/bus/bus_request_service.dart';
 
 class BusRepository {
@@ -14,15 +15,33 @@ class BusRepository {
 
   final BusRequestService _busRequestService = BusRequestService();
 
-  Stream<List<RouteBean>> getRouteData(String routeName, String city) {
-    return _busRequestService.getBusRoute(routeName, city).map((response) {
+  Stream<List<RouteBean>> getRoute(String routeName, String city) {
+    return _busRequestService.getRoute(routeName, city).map((response) {
       var result1 = response.data as List<dynamic>;
       List<RouteBean> result2 = [];
       for (var element in result1) {
         result2.add(RouteBean.fromJson(Map<String, dynamic>.from(element)));
       }
       return result2;
-      // return RouteBean.fromJson(Map<String, dynamic>.from(response.data));
+    });
+  }
+
+  Stream<List<StopOfRouteBean>> getStopOfRoute(
+      String routeUID, String routeName, String city) {
+
+    return _busRequestService.getStopOfRoute(
+        routeName,
+        city,
+    ).map((response) {
+      var result = response.data as List<dynamic>;
+      List<StopOfRouteBean> result2 = [];
+      for(var e in result) {
+        StopOfRouteBean stopOfRoute = StopOfRouteBean.fromJson(Map<String, dynamic>.from(e));
+        if(stopOfRoute.routeUID == routeUID) {
+          result2.add(stopOfRoute);
+        }
+      }
+      return result2;
     });
   }
 }

@@ -23,6 +23,7 @@ class _DefaultPageState extends State<DefaultPage> {
     super.initState();
     bloc = BlocProvider.of<DefaultPageBloc>(context);
     ApplicationBloc.getInstance().getNeededApi();
+    ApplicationBloc.getInstance().init();
   }
 
   @override
@@ -48,6 +49,7 @@ class _DefaultPageState extends State<DefaultPage> {
                   return SizedBox();
                 }),
             drawer: Drawer(),
+            drawerEnableOpenDragGesture: false,
             body: Container(
               child: _contentPage(routeData),
             ),

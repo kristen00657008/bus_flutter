@@ -16,3 +16,7 @@ class PageName{
 
   static const String BusRoutePage = "/BusRoutePage";
 }
+
+class BlocOptionKey {
+  static const String BusRouteKey = "/BusRouteKey";
+}
