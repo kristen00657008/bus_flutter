@@ -19,29 +19,7 @@ class BusRoutePageState extends State<BusRoutePage>
     super.initState();
     bloc = BlocProvider.of<BusRoutePageBloc>(context);
     bloc.getStopOfRoute();
-    bloc.init(this);
-
-    // Timer.periodic(Duration(seconds: 6), (timer) {
-    //   setState(() {
-    //     controller1.reset();
-    //     controller1 = AnimationController(
-    //       vsync: this,
-    //       duration: Duration(seconds: 5),
-    //     )..forward();
-    //     sizeAnimation1 = Tween<double>(begin: 1, end: 0).animate(controller1);
-    //   });
-    //   Future.delayed(Duration(seconds: 5), () {
-    //     setState(() {
-    //       controller1.reset();
-    //       controller1 = AnimationController(
-    //         vsync: this,
-    //         duration: Duration(seconds: 1),
-    //       )..forward();
-    //       sizeAnimation1 = Tween<double>(begin: 1, end: 0).animate(controller1);
-    //     });
-    //   });
-    // });
-
+    bloc.initIndicator(this);
   }
 
   @override

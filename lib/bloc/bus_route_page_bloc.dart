@@ -35,7 +35,7 @@ class BusRoutePageBloc extends PageBloc {
   late Animation indicatorAnimation;
   late Timer _indicatorTimer;
 
-  void init(BusRoutePageState state) {
+  void initIndicator(BusRoutePageState state) {
     indicatorCycle(state);
     _indicatorTimer = Timer.periodic(Duration(seconds: 11), (timer) {
       indicatorController.reset();
