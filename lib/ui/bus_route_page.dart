@@ -8,29 +8,59 @@ class BusRoutePage extends StatefulWidget {
   const BusRoutePage({Key? key}) : super(key: key);
 
   @override
-  State<BusRoutePage> createState() => _BusRoutePageState();
+  State<BusRoutePage> createState() => BusRoutePageState();
 }
-
-class _BusRoutePageState extends State<BusRoutePage>
+class BusRoutePageState extends State<BusRoutePage>
     with TickerProviderStateMixin {
   late BusRoutePageBloc bloc;
-
   @override
   void initState() {
+
     super.initState();
     bloc = BlocProvider.of<BusRoutePageBloc>(context);
+    bloc.getStopOfRoute();
+    bloc.init(this);
+
+    // Timer.periodic(Duration(seconds: 6), (timer) {
+    //   setState(() {
+    //     controller1.reset();
+    //     controller1 = AnimationController(
+    //       vsync: this,
+    //       duration: Duration(seconds: 5),
+    //     )..forward();
+    //     sizeAnimation1 = Tween<double>(begin: 1, end: 0).animate(controller1);
+    //   });
+    //   Future.delayed(Duration(seconds: 5), () {
+    //     setState(() {
+    //       controller1.reset();
+    //       controller1 = AnimationController(
+    //         vsync: this,
+    //         duration: Duration(seconds: 1),
+    //       )..forward();
+    //       sizeAnimation1 = Tween<double>(begin: 1, end: 0).animate(controller1);
+    //     });
+    //   });
+    // });
+
+  }
+
+  @override
+  void dispose() {
+    bloc.indicatorController.dispose();
+    bloc.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<StopOfRouteBean>>(
-        future: bloc.getStopOfRoute(),
+    return StreamBuilder<List<StopOfRouteBean>>(
+        stream: bloc.stopOfRouteStream,
         builder: (context, AsyncSnapshot<List<StopOfRouteBean>> snapshot) {
-          if (!snapshot.hasData) {
+          if (!snapshot.hasData || snapshot.connectionState == ConnectionState.waiting) {
             return Container();
           }
-          List<StopOfRouteBean> stopOfRoutes = snapshot.requireData;
-          bloc.controller =
+          List<StopOfRouteBean> stopOfRoutes = snapshot.data ?? [];
+          bloc.tabController =
               TabController(vsync: this, length: stopOfRoutes.length);
           return DefaultTabController(
             length: stopOfRoutes.length,
@@ -38,10 +68,16 @@ class _BusRoutePageState extends State<BusRoutePage>
               appBar: _buildAppBar(stopOfRoutes),
               backgroundColor: defaultBackgroundColor,
               body: TabBarView(
-                controller: bloc.controller,
+                controller: bloc.tabController,
                 children: stopOfRoutes.map((StopOfRouteBean stopOfRoute) {
-                  return ListView.builder(
+                  return ListView.separated(
                     itemCount: stopOfRoute.stops.length,
+                    separatorBuilder: (BuildContext context, int index) {
+                      return Container(
+                        height: 0.2,
+                        color: Colors.grey,
+                      );
+                    },
                     itemBuilder: (context, index) {
                       return ListTile(
                         title: Text(
@@ -61,43 +97,69 @@ class _BusRoutePageState extends State<BusRoutePage>
 
   PreferredSizeWidget _buildAppBar(List<StopOfRouteBean> stopOfRoutes) {
     return AppBar(
-        title: Text(stopOfRoutes.first.routeName.tw),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: const [appBarColor1, appBarColor2],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: const [0.0, 1.0],
-            ),
+      title: Text(stopOfRoutes.isNotEmpty ? stopOfRoutes.first.routeName.tw : ""),
+      centerTitle: true,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: const [appBarColor1, appBarColor2],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: const [0.0, 1.0],
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              bloc.getStopOfRoute();
-            },
-            icon: Icon(Icons.map_outlined),
-          )
-        ],
-        bottom: TabBar(
-          controller: bloc.controller,
-          indicatorColor: buttonWhiteColor,
-          indicatorWeight: 4,
-          labelStyle: TextStyle(
-            fontSize: 15
-          ),
-          tabs: stopOfRoutes.map((stopOfRoute) {
-            String label = stopOfRoutes.indexOf(stopOfRoute) == 0 ? bloc
-                .busRoute.destinationStopNameZh : bloc.busRoute
-                .departureStopNameZh;
-            return Tab(
-              text: "往 $label",
-
-            );
-          }).toList(),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {
+            bloc.getStopOfRoute();
+          },
+          icon: Icon(Icons.map_outlined),
         )
+      ],
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(50),
+        child: Column(
+          children: [
+            TabBar(
+              controller: bloc.tabController,
+              indicatorColor: buttonWhiteColor,
+              indicator: UnderlineTabIndicator(
+                borderSide: BorderSide(width: 3.0, color: Colors.yellow),
+                insets: EdgeInsets.symmetric(vertical: 5),
+              ),
+              indicatorSize: TabBarIndicatorSize.label ,
+              labelStyle: TextStyle(fontSize: 15),
+              tabs: stopOfRoutes.map((stopOfRoute) {
+                String label = stopOfRoutes.indexOf(stopOfRoute) == 0
+                    ? bloc.busRoute.destinationStopNameZh
+                    : bloc.busRoute.departureStopNameZh;
+                return Tab(
+                  text: "往 $label",
+                );
+              }).toList(),
+            ),
+            StreamBuilder<Animation>(
+              stream: bloc.indicatorAnimationStream,
+              builder: (context, snapshot) {
+                if(snapshot.hasData) {
+                  return AnimatedBuilder(
+                      animation: snapshot.requireData,
+                      builder: (context, child) {
+                        return LinearProgressIndicator(
+                          value: snapshot.requireData.value ,
+                          backgroundColor: secondBackgroundColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(appBarColor1),
+                        );
+                      }
+                  );
+                }
+                return Container(color: Colors.purple);
+              }
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
