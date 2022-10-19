@@ -22,3 +22,19 @@ extension StreamBracket on Stream<Response> {
         return response;
       });
 }
+
+extension StringExtension on String {
+  String toTime() {
+    String time = replaceFirst("+08:00", "")..replaceFirst("T", " ");
+    DateTime dateTime = DateTime.parse(time);
+    return dateTime.hour.toString() + ":" + dateTime.minute.toString();
+  }
+}
+
+extension IntegerExtension on int {
+
+  String toMinute() {
+    double minute = this / 60;
+    return minute.toInt().toString() + "分";
+  }
+}

@@ -10,7 +10,7 @@ class RouteBean {
   @JsonKey(name: 'RouteID', defaultValue: "")
   String routeID;
 
-  @JsonKey(name: 'HasSubRoutes', defaultValue: false)
+  @JsonKey(name: 'HasSubRoutes')
   bool hasSubRoutes;
 
   @JsonKey(name: 'Operators', defaultValue: [])
@@ -28,7 +28,7 @@ class RouteBean {
   @JsonKey(name: 'BusRouteType', defaultValue: 0)
   int busRouteType;
 
-  @JsonKey(name: 'RouteName', defaultValue: null)
+  @JsonKey(name: 'RouteName')
   RouteNameBean routeName;
 
   @JsonKey(name: 'DepartureStopNameZh', defaultValue: "")
@@ -138,8 +138,8 @@ class SubRouteBean {
   @JsonKey(name: 'OperatorIDs', defaultValue: [])
   List<String> operatorIDs;
 
-  @JsonKey(name: 'SubRouteName', defaultValue: null)
-  SubRouteNameBean subRouteName;
+  @JsonKey(name: 'SubRouteName')
+  RouteNameBean subRouteName;
 
   @JsonKey(name: 'Headsign', defaultValue: "")
   String headSign;
@@ -164,25 +164,6 @@ class SubRouteBean {
       _$SubRouteBeanFromJson(json);
 
   Map<String, dynamic> toJson() => _$SubRouteBeanToJson(this);
-}
-
-@JsonSerializable()
-class SubRouteNameBean {
-  @JsonKey(name: 'Zh_tw', defaultValue: "")
-  String tw;
-
-  @JsonKey(name: 'En', defaultValue: "")
-  String en;
-
-  SubRouteNameBean({
-    required this.tw,
-    required this.en,
-  });
-
-  factory SubRouteNameBean.fromJson(Map<String, dynamic> json) =>
-      _$SubRouteNameBeanFromJson(json);
-
-  Map<String, dynamic> toJson() => _$SubRouteNameBeanToJson(this);
 }
 
 @JsonSerializable()

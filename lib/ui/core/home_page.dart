@@ -232,9 +232,9 @@ class _HomePageState extends State<HomePage>
                 offstage: isSearching || bloc.controller.isAnimating,
                 child: Container(
                   padding: EdgeInsets.only(
-                      top: kToolbarHeight * 2, bottom: appBarBottomHeight),
+                      top: kToolbarHeight * 1.8, bottom: appBarBottomHeight),
                   margin: EdgeInsets.symmetric(
-                    vertical: 8,
+                    vertical: 5,
                   ),
                   child: Row(
                     children: [
@@ -313,20 +313,20 @@ class _HomePageState extends State<HomePage>
         : "——";
     return Column(
       children: [
-        Text(
-          T,
-          style: TextStyle(
-            fontSize: 60,
-            color: whiteColor,
-          ),
-        ),
         Expanded(
           child: Text(
-            minT + " / " + maxT,
+            T,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 60,
               color: whiteColor,
             ),
+          ),
+        ),
+        Text(
+          minT + " / " + maxT,
+          style: TextStyle(
+            fontSize: 15,
+            color: whiteColor,
           ),
         ),
       ],

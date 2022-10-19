@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:bus/bean/bus/estimatedTimeOfArrival_bean/estimatedTimeOfArrival_bean.dart';
 import 'package:bus/bean/bus/route_bean/route_bean.dart';
 import 'package:bus/bean/bus/stop_of_route_bean/stop_of_route_bean.dart';
 import 'package:bus/http/bus/bus_repository.dart';
+import 'package:bus/resource/extension.dart';
 import 'package:bus/route/base_bloc.dart';
 import 'package:bus/route/page_bloc.dart';
 import 'package:bus/route/page_name.dart';
@@ -12,6 +14,8 @@ import 'package:rxdart/rxdart.dart';
 
 class BusRoutePageBloc extends PageBloc {
   BusRoutePageBloc(BlocOption blocOption) : super(blocOption);
+
+  ScrollController scrollController = ScrollController();
 
   final BusRepository _busRepository = BusRepository();
 
@@ -25,8 +29,14 @@ class BusRoutePageBloc extends PageBloc {
   Stream<List<StopOfRouteBean>> get stopOfRouteStream =>
       _stopOfRouteSubject.stream;
 
+  final BehaviorSubject<List<EstimatedTimeOfArrivalBean>> _estimatedTimeSubject =
+  BehaviorSubject.seeded([]);
+
+  Stream<List<EstimatedTimeOfArrivalBean>> get estimatedTimeStream =>
+      _estimatedTimeSubject.stream;
+
   final BehaviorSubject<Animation> _indicatorAnimationSubject =
-  BehaviorSubject();
+      BehaviorSubject();
 
   Stream<Animation> get indicatorAnimationStream =>
       _indicatorAnimationSubject.stream;
@@ -38,6 +48,7 @@ class BusRoutePageBloc extends PageBloc {
   void initIndicator(BusRoutePageState state) {
     indicatorCycle(state);
     _indicatorTimer = Timer.periodic(Duration(seconds: 11), (timer) {
+      print("refresh");
       indicatorController.reset();
       indicatorCycle(state);
     });
@@ -45,10 +56,10 @@ class BusRoutePageBloc extends PageBloc {
 
   void indicatorCycle(BusRoutePageState state) {
     indicatorController = AnimationController(
-      vsync: state,
-      duration: Duration(seconds: 10),
-      animationBehavior: AnimationBehavior.preserve
-    )..forward();
+        vsync: state,
+        duration: Duration(seconds: 10),
+        animationBehavior: AnimationBehavior.preserve)
+      ..forward();
     indicatorAnimation =
         Tween<double>(begin: 1, end: 0).animate(indicatorController);
     _indicatorAnimationSubject.add(indicatorAnimation);
@@ -63,6 +74,7 @@ class BusRoutePageBloc extends PageBloc {
       indicatorAnimation =
           Tween<double>(begin: 0, end: 1).animate(indicatorController);
       _indicatorAnimationSubject.add(indicatorAnimation);
+      refresh();
     });
   }
 
@@ -72,6 +84,28 @@ class BusRoutePageBloc extends PageBloc {
         .listen((event) {
       _stopOfRouteSubject.add(event);
     });
+  }
+
+  void getEstimatedTimeOfArrival() {
+    _busRepository.getEstimatedTimeOfArrival(busRoute.routeUID, busRoute.routeName.tw, busRoute.city)
+        .listen((event) {
+          _estimatedTimeSubject.add(event);
+    });
+  }
+
+  String correspondStop(StopBean stopBean, int direction) {
+    EstimatedTimeOfArrivalBean estimatedTime = _estimatedTimeSubject.value.firstWhere((element) {
+      return element.stopUID == stopBean.stopUID && element.direction == direction;
+    });
+    if(estimatedTime.estimateTime == 0) {
+      return estimatedTime.nextBusTime.toTime();
+    }
+    return estimatedTime.estimateTime.toMinute();
+  }
+
+  void refresh() {
+    print("refresh");
+    getEstimatedTimeOfArrival();
   }
 
   @override

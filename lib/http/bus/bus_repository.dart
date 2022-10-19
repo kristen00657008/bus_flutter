@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'package:bus/bean/bus/estimatedTimeOfArrival_bean/estimatedTimeOfArrival_bean.dart';
 import 'package:bus/bean/bus/route_bean/route_bean.dart';
 import 'package:bus/bean/bus/stop_of_route_bean/stop_of_route_bean.dart';
 import 'package:bus/http/bus/bus_request_service.dart';
@@ -28,17 +29,37 @@ class BusRepository {
 
   Stream<List<StopOfRouteBean>> getStopOfRoute(
       String routeUID, String routeName, String city) {
-
-    return _busRequestService.getStopOfRoute(
-        routeName,
-        city,
-    ).map((response) {
+    return _busRequestService
+        .getStopOfRoute(
+      routeName,
+      city,
+    )
+        .map((response) {
       var result = response.data as List<dynamic>;
       List<StopOfRouteBean> result2 = [];
-      for(var e in result) {
-        StopOfRouteBean stopOfRoute = StopOfRouteBean.fromJson(Map<String, dynamic>.from(e));
-        if(stopOfRoute.routeUID == routeUID) {
+      for (var e in result) {
+        StopOfRouteBean stopOfRoute =
+            StopOfRouteBean.fromJson(Map<String, dynamic>.from(e));
+        if (stopOfRoute.routeUID == routeUID) {
           result2.add(stopOfRoute);
+        }
+      }
+      return result2;
+    });
+  }
+
+  Stream<List<EstimatedTimeOfArrivalBean>> getEstimatedTimeOfArrival(
+      String routeUID, String routeName, String city) {
+    return _busRequestService
+        .getEstimatedTimeOfArrival(routeName, city)
+        .map((response) {
+      var result = response.data as List<dynamic>;
+      List<EstimatedTimeOfArrivalBean> result2 = [];
+      for (var e in result) {
+        EstimatedTimeOfArrivalBean estimatedTimeOfArrivalBean =
+        EstimatedTimeOfArrivalBean.fromJson(Map<String, dynamic>.from(e));
+        if (estimatedTimeOfArrivalBean.routeUID == routeUID) {
+          result2.add(estimatedTimeOfArrivalBean);
         }
       }
       return result2;

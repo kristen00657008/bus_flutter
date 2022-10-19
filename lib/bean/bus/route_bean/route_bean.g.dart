@@ -9,7 +9,7 @@ part of 'route_bean.dart';
 RouteBean _$RouteBeanFromJson(Map<String, dynamic> json) => RouteBean(
       routeUID: json['RouteUID'] as String? ?? '',
       routeID: json['RouteID'] as String? ?? '',
-      hasSubRoutes: json['HasSubRoutes'] as bool? ?? false,
+      hasSubRoutes: json['HasSubRoutes'] as bool,
       operators: (json['Operators'] as List<dynamic>?)
               ?.map((e) => OperatorBean.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -88,8 +88,8 @@ SubRouteBean _$SubRouteBeanFromJson(Map<String, dynamic> json) => SubRouteBean(
               ?.map((e) => e as String)
               .toList() ??
           [],
-      subRouteName: SubRouteNameBean.fromJson(
-          json['SubRouteName'] as Map<String, dynamic>),
+      subRouteName:
+          RouteNameBean.fromJson(json['SubRouteName'] as Map<String, dynamic>),
       headSign: json['Headsign'] as String? ?? '',
       headSignEn: json['HeadsignEn'] as String? ?? '',
       direction: json['Direction'] as int? ?? 0,
@@ -104,18 +104,6 @@ Map<String, dynamic> _$SubRouteBeanToJson(SubRouteBean instance) =>
       'Headsign': instance.headSign,
       'HeadsignEn': instance.headSignEn,
       'Direction': instance.direction,
-    };
-
-SubRouteNameBean _$SubRouteNameBeanFromJson(Map<String, dynamic> json) =>
-    SubRouteNameBean(
-      tw: json['Zh_tw'] as String? ?? '',
-      en: json['En'] as String? ?? '',
-    );
-
-Map<String, dynamic> _$SubRouteNameBeanToJson(SubRouteNameBean instance) =>
-    <String, dynamic>{
-      'Zh_tw': instance.tw,
-      'En': instance.en,
     };
 
 RouteNameBean _$RouteNameBeanFromJson(Map<String, dynamic> json) =>

@@ -10,7 +10,6 @@ class BusRequestService {
   final baseUrl = "https://ptx.transportdata.tw/MOTC/v2/Bus/";
   final String appId = "e329c82e8e4d4570a965c94793f43cc3";
   final String appKey = "Z8FNUWcoYOIldYjv7P8ELjNrPLQ";
-
   final Dio _dio = Dio();
 
   Dio get dio => _dio;
@@ -49,16 +48,26 @@ class BusRequestService {
         .asStream();
   }
 
-  Stream<Response> getStopOfRoute(String routeID, String city) {
+  Stream<Response> getStopOfRoute(String routeName, String city) {
     addHeader();
     city = "/City/$city/";
-    print(baseUrl + Category.StopOfRoute.name + city + routeID + "?%24format=JSON");
+    print(baseUrl + Category.StopOfRoute.name + city + routeName + "?%24format=JSON");
     return dio
-        .get(baseUrl + Category.StopOfRoute.name + city + routeID + "?%24format=JSON")
+        .get(baseUrl + Category.StopOfRoute.name + city + routeName + "?%24format=JSON")
+        .asStream();
+  }
+
+  Stream<Response> getEstimatedTimeOfArrival(String routeName, String city) {
+    addHeader();
+    city = "/City/$city/";
+    print(baseUrl + Category.EstimatedTimeOfArrival.name + city + routeName + "?%24format=JSON");
+    return dio
+        .get(baseUrl + Category.EstimatedTimeOfArrival.name + city + routeName + "?%24format=JSON")
         .asStream();
   }
 }
 enum Category{
   Route,
   StopOfRoute,
+  EstimatedTimeOfArrival,
 }
