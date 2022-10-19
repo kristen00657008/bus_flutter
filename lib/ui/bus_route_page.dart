@@ -36,12 +36,12 @@ class BusRoutePageState extends State<BusRoutePage>
   Widget build(BuildContext context) {
     return StreamBuilder<List<StopOfRouteBean>>(
         stream: bloc.stopOfRouteStream,
-        builder: (context, AsyncSnapshot<List<StopOfRouteBean>> snapshot) {
-          if (!snapshot.hasData ||
-              snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, AsyncSnapshot<List<StopOfRouteBean>> stopSnapshot) {
+          if (!stopSnapshot.hasData ||
+              stopSnapshot.connectionState == ConnectionState.waiting) {
             return Container();
           }
-          List<StopOfRouteBean> stopOfRoutes = snapshot.data ?? [];
+          List<StopOfRouteBean> stopOfRoutes = stopSnapshot.data ?? [];
           bloc.tabController =
               TabController(vsync: this, length: stopOfRoutes.length);
           return DefaultTabController(
@@ -57,48 +57,68 @@ class BusRoutePageState extends State<BusRoutePage>
                   ];
                 },
                 body: StreamBuilder<List<EstimatedTimeOfArrivalBean>>(
-                  stream: bloc.estimatedTimeStream,
-                  builder: (context, snapshot) {
-                    return TabBarView(
-                      controller: bloc.tabController,
-                      children: stopOfRoutes.map((StopOfRouteBean stopOfRoute) {
-                        return CustomScrollView(
-                          slivers: <Widget>[
-                            SliverFixedExtentList(
-                              itemExtent: 48.0,
-                              delegate: SliverChildBuilderDelegate(
-                                (BuildContext context, int index) => Column(
-                                  children: [
-                                    Expanded(
-                                      child: ListTile(
-                                        leading: Text(
-                                          bloc.correspondStop(stopOfRoute.stops[index], bloc.tabController.index),
-                                          style: TextStyle(color: Colors.white),
+                    stream: bloc.estimatedTimeStream,
+                    builder: (context, estimateTimeSnapshot) {
+                      return TabBarView(
+                        controller: bloc.tabController,
+                        children:
+                            stopOfRoutes.map((StopOfRouteBean stopOfRoute) {
+                          return CustomScrollView(
+                            slivers: <Widget>[
+                              SliverFixedExtentList(
+                                itemExtent: 48.0,
+                                delegate: SliverChildBuilderDelegate(
+                                  (BuildContext context, int index) => Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListTile(
+                                          leading: Container(
+                                            padding: EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                                border: Border.all(
+                                                  color: Colors.teal,
+                                                  width: 2
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12)),
+                                            child: Text(
+                                              estimateTimeSnapshot.hasData && stopSnapshot.hasData
+                                                  ? bloc.correspondStop(
+                                                      stopOfRoute.stops[index],
+                                                      bloc.tabController.index)
+                                                  : "",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                          title: Text(
+                                            stopOfRoute
+                                                .stops[index].stopName.tw,
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          onTap: () {
+                                            bloc.correspondStop(
+                                                stopOfRoute.stops[index],
+                                                bloc.tabController.index);
+                                          },
                                         ),
-                                        title: Text(
-                                          stopOfRoute.stops[index].stopName.tw,
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        onTap: () {
-                                          bloc.correspondStop(stopOfRoute.stops[index], bloc.tabController.index);
-                                        },
                                       ),
-                                    ),
-                                    Container(
-                                      height: 0.2,
-                                      color: Colors.grey,
-                                    ),
-                                  ],
+                                      Container(
+                                        height: 0.2,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ),
+                                  childCount: stopOfRoute.stops.length,
                                 ),
-                                childCount: stopOfRoute.stops.length,
                               ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    );
-                  }
-                ),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    }),
               ),
             ),
           );
