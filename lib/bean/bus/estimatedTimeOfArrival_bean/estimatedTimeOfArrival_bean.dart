@@ -38,8 +38,8 @@ class EstimatedTimeOfArrivalBean {
   @JsonKey(name: 'Direction', defaultValue: 0)
   int direction;
 
-  @JsonKey(name: 'EstimateTime', defaultValue: 0)
-  int estimateTime;
+  @JsonKey(name: 'EstimateTime', defaultValue: null)
+  int? estimateTime;
 
   @JsonKey(name: 'StopSequence', defaultValue: 0)
   int stopSequence;
@@ -47,8 +47,8 @@ class EstimatedTimeOfArrivalBean {
   @JsonKey(name: 'StopStatus', defaultValue: 0)
   int stopStatus;
 
-  @JsonKey(name: 'NextBusTime', defaultValue: "")
-  String nextBusTime;
+  @JsonKey(name: 'NextBusTime', defaultValue: null)
+  String? nextBusTime;
 
   @JsonKey(name: 'Estimates', defaultValue: [])
   List<EstimateBean> estimates;

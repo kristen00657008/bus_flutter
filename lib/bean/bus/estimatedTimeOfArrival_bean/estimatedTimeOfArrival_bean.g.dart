@@ -23,10 +23,10 @@ EstimatedTimeOfArrivalBean _$EstimatedTimeOfArrivalBeanFromJson(
       subRouteName:
           RouteNameBean.fromJson(json['SubRouteName'] as Map<String, dynamic>),
       direction: json['Direction'] as int? ?? 0,
-      estimateTime: json['EstimateTime'] as int? ?? 0,
+      estimateTime: json['EstimateTime'] as int?,
       stopSequence: json['StopSequence'] as int? ?? 0,
       stopStatus: json['StopStatus'] as int? ?? 0,
-      nextBusTime: json['NextBusTime'] as String? ?? '',
+      nextBusTime: json['NextBusTime'] as String?,
       estimates: (json['Estimates'] as List<dynamic>?)
               ?.map((e) => EstimateBean.fromJson(e as Map<String, dynamic>))
               .toList() ??

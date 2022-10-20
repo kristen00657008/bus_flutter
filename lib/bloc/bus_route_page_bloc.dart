@@ -48,7 +48,6 @@ class BusRoutePageBloc extends PageBloc {
   void initIndicator(BusRoutePageState state) {
     indicatorCycle(state);
     _indicatorTimer = Timer.periodic(Duration(seconds: 11), (timer) {
-      print("refresh");
       indicatorController.reset();
       indicatorCycle(state);
     });
@@ -93,18 +92,31 @@ class BusRoutePageBloc extends PageBloc {
     });
   }
 
-  String correspondStop(StopBean stopBean, int direction) {
-    EstimatedTimeOfArrivalBean estimatedTime = _estimatedTimeSubject.value.firstWhere((element) {
-      return element.stopUID == stopBean.stopUID && element.direction == direction;
-    });
-    if(estimatedTime.estimateTime == 0) {
-      return estimatedTime.nextBusTime.toTime();
+  EstimatedInfo getEstimatedInfo(StopBean stopBean, int direction) {
+    if(_estimatedTimeSubject.value.isNotEmpty) {
+      EstimatedTimeOfArrivalBean estimatedTime = _estimatedTimeSubject.value.firstWhere((element) {
+        return element.stopUID == stopBean.stopUID && element.direction == direction;
+      });
+
+      if(estimatedTime.estimateTime == null && estimatedTime.nextBusTime == null) {
+        return EstimatedInfo(estimateState: EstimateState.none, time: 0);
+      } else if(estimatedTime.estimateTime != null ) {
+        switch(estimatedTime.estimateTime!.toMinute()) {
+          case 0:
+            return EstimatedInfo(estimateState: EstimateState.arrive, time: 0);
+          case 1:
+            return EstimatedInfo(estimateState: EstimateState.soon, time: 60);
+          default:
+            return EstimatedInfo(estimateState: EstimateState.estimateTime, time: estimatedTime.estimateTime!, timeString: estimatedTime.estimateTime!.toMinute().toString());
+        }
+      } else if (estimatedTime.nextBusTime != null) {
+        return EstimatedInfo(estimateState: EstimateState.nextTime, time: estimatedTime.nextBusTime!.timeToSecond(), timeString: estimatedTime.nextBusTime!.toTime());
+      }
     }
-    return estimatedTime.estimateTime.toMinute();
+    return EstimatedInfo(estimateState: EstimateState.none, time: 0);
   }
 
   void refresh() {
-    print("refresh");
     getEstimatedTimeOfArrival();
   }
 
@@ -113,4 +125,30 @@ class BusRoutePageBloc extends PageBloc {
     super.dispose();
     _indicatorTimer.cancel();
   }
+}
+
+class EstimatedInfo {
+  final EstimateState estimateState;
+  int time;
+  String timeString;
+
+  EstimatedInfo({
+    required this.estimateState,
+    required this.time,
+    this.timeString = "",
+  });
+}
+
+enum EstimateState {
+
+  none,
+
+  estimateTime,
+
+  nextTime,
+
+  soon,
+
+  arrive,
+
 }

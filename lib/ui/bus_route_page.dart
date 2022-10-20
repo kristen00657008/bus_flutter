@@ -1,8 +1,10 @@
 import 'package:bus/bean/bus/estimatedTimeOfArrival_bean/estimatedTimeOfArrival_bean.dart';
 import 'package:bus/bean/bus/stop_of_route_bean/stop_of_route_bean.dart';
 import 'package:bus/bloc/bus_route_page_bloc.dart';
+import 'package:bus/notificationservice.dart';
 import 'package:bus/resource/colors.dart';
 import 'package:bus/route/base_bloc.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class BusRoutePage extends StatefulWidget {
@@ -66,32 +68,18 @@ class BusRoutePageState extends State<BusRoutePage>
                           return CustomScrollView(
                             slivers: <Widget>[
                               SliverFixedExtentList(
-                                itemExtent: 48.0,
+                                itemExtent: 56.0,
                                 delegate: SliverChildBuilderDelegate(
                                   (BuildContext context, int index) => Column(
                                     children: [
                                       Expanded(
                                         child: ListTile(
-                                          leading: Container(
-                                            padding: EdgeInsets.all(6),
-                                            decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: Colors.teal,
-                                                  width: 2
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12)),
-                                            child: Text(
-                                              estimateTimeSnapshot.hasData && stopSnapshot.hasData
-                                                  ? bloc.correspondStop(
-                                                      stopOfRoute.stops[index],
-                                                      bloc.tabController.index)
-                                                  : "",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
+                                          leading: _buildEstimatedWidget(
+                                              estimateTimeSnapshot,
+                                              stopOfRoute,
+                                              index),
+                                          contentPadding:
+                                              EdgeInsets.only(left: 5),
                                           title: Text(
                                             stopOfRoute
                                                 .stops[index].stopName.tw,
@@ -99,9 +87,8 @@ class BusRoutePageState extends State<BusRoutePage>
                                                 TextStyle(color: Colors.white),
                                           ),
                                           onTap: () {
-                                            bloc.correspondStop(
-                                                stopOfRoute.stops[index],
-                                                bloc.tabController.index);
+                                            _showActionSheet(
+                                                context, stopOfRoute, index);
                                           },
                                         ),
                                       ),
@@ -123,6 +110,58 @@ class BusRoutePageState extends State<BusRoutePage>
             ),
           );
         });
+  }
+
+  void _showActionSheet(BuildContext context, StopOfRouteBean stopOfRoute, index) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              int currentEstimateTime = bloc
+                  .getEstimatedInfo(
+                      stopOfRoute.stops[index], bloc.tabController.index)
+                  .time - 300;
+              if(currentEstimateTime > 0 ) {
+                print("$currentEstimateTime 秒後發出通知");
+                NotificationService().showNotification(
+                  stopOfRoute.stops[index].stopSequence,
+                  "公車即將到站通知",
+                  "${bloc.busRoute.routeName.tw}即將到達:${stopOfRoute.stops[index].stopName.tw}",
+                  currentEstimateTime,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("已預約到站通知"),
+                ));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("無法新增5分鐘內到達公車提醒"),
+                ));
+              }
+
+            },
+            child: const Text("新增到站提醒"),
+          ),
+        ],
+        cancelButton: Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(
+                Radius.circular(12),
+              ),
+              color: Colors.teal),
+          child: CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAppBar(
@@ -149,11 +188,9 @@ class BusRoutePageState extends State<BusRoutePage>
               style: TextStyle(fontSize: 40, color: Colors.white),
             ),
             IconButton(
-              onPressed: () {
-                bloc.getEstimatedTimeOfArrival();
-              },
+              onPressed: () {},
               icon: Icon(Icons.map_outlined),
-            )
+            ),
           ],
         ),
         centerTitle: true,
@@ -224,5 +261,122 @@ class BusRoutePageState extends State<BusRoutePage>
             ],
           ),
         ));
+  }
+
+  Widget _buildEstimatedWidget(estimateTimeSnapshot, stopOfRoute, int index) {
+    if (!estimateTimeSnapshot.hasData || stopOfRoute.stops.isEmpty) {
+      return Container(
+        width: 70,
+        margin: EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+            border: Border.all(color: Colors.teal, width: 2),
+            borderRadius: BorderRadius.circular(18)),
+      );
+    }
+    EstimatedInfo estimatedInfo = bloc.getEstimatedInfo(
+        stopOfRoute.stops[index], bloc.tabController.index);
+    switch (estimatedInfo.estimateState) {
+      case EstimateState.none:
+        return _buildNoneState();
+      case EstimateState.estimateTime:
+      case EstimateState.nextTime:
+        return _buildTimeState(estimatedInfo);
+      case EstimateState.soon:
+        return _buildSoonState();
+      case EstimateState.arrive:
+        return _buildArrivalState();
+      default:
+        _buildSoonState();
+    }
+    return Container(
+      width: 70,
+    );
+  }
+
+  Widget _buildTimeState(EstimatedInfo estimatedInfo) {
+    return Container(
+      width: 70,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.white, width: 0.5),
+          borderRadius: BorderRadius.circular(18)),
+      child: estimatedInfo.estimateState == EstimateState.estimateTime
+          ? Center(
+              child: RichText(
+                text: TextSpan(
+                  text: estimatedInfo.timeString,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w300),
+                  children: const <TextSpan>[
+                    TextSpan(
+                        text: ' 分',
+                        style: TextStyle(color: Colors.white, fontSize: 12)),
+                  ],
+                ),
+              ),
+            )
+          : Center(
+              child: Text(
+                estimatedInfo.timeString,
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildArrivalState() {
+    return Container(
+      width: 70,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.red, width: 2),
+          borderRadius: BorderRadius.circular(18)),
+      child: Center(
+        child: Text(
+          "進站中",
+          style: TextStyle(
+            color: Colors.red,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSoonState() {
+    return Container(
+      width: 70,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.teal, width: 2),
+          borderRadius: BorderRadius.circular(18)),
+      child: Center(
+        child: Text(
+          "將進站",
+          style: TextStyle(
+            color: Colors.teal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoneState() {
+    return Container(
+      width: 70,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey, width: 2),
+          borderRadius: BorderRadius.circular(18)),
+      child: Center(
+        child: Text(
+          "未發車",
+          style: TextStyle(
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -313,13 +313,11 @@ class _HomePageState extends State<HomePage>
         : "——";
     return Column(
       children: [
-        Expanded(
-          child: Text(
-            T,
-            style: TextStyle(
-              fontSize: 60,
-              color: whiteColor,
-            ),
+        Text(
+          T,
+          style: TextStyle(
+            fontSize: 60,
+            color: whiteColor,
           ),
         ),
         Text(

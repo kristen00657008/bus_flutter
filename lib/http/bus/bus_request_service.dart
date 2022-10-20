@@ -41,7 +41,6 @@ class BusRequestService {
 
   Stream<Response> getRoute(String routeName, String city) {
     addHeader();
-    print(Category.Route.toString());
     city = "/City/$city/";
     return dio
         .get(baseUrl + Category.Route.name + city + routeName + "?%24format=JSON")
@@ -51,7 +50,7 @@ class BusRequestService {
   Stream<Response> getStopOfRoute(String routeName, String city) {
     addHeader();
     city = "/City/$city/";
-    print(baseUrl + Category.StopOfRoute.name + city + routeName + "?%24format=JSON");
+    // print(baseUrl + Category.StopOfRoute.name + city + routeName + "?%24format=JSON");
     return dio
         .get(baseUrl + Category.StopOfRoute.name + city + routeName + "?%24format=JSON")
         .asStream();
@@ -60,7 +59,7 @@ class BusRequestService {
   Stream<Response> getEstimatedTimeOfArrival(String routeName, String city) {
     addHeader();
     city = "/City/$city/";
-    print(baseUrl + Category.EstimatedTimeOfArrival.name + city + routeName + "?%24format=JSON");
+    // print(baseUrl + Category.EstimatedTimeOfArrival.name + city + routeName + "?%24format=JSON");
     return dio
         .get(baseUrl + Category.EstimatedTimeOfArrival.name + city + routeName + "?%24format=JSON")
         .asStream();
