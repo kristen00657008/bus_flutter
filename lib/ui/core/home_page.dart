@@ -70,9 +70,8 @@ class _HomePageState extends State<HomePage>
                               SliverFixedExtentList(
                                 itemExtent: 48.0,
                                 delegate: SliverChildBuilderDelegate(
-                                  (BuildContext context, int index) =>
-                                      ListTile(
-                                          title: Text(
+                                  (BuildContext context, int index) => ListTile(
+                                      title: Text(
                                     '$tabName Item $index',
                                     style: TextStyle(color: Colors.white),
                                   )),
@@ -217,25 +216,20 @@ class _HomePageState extends State<HomePage>
         stream: bloc.weatherBeanStream,
         builder: (context, snapshot) {
           var weatherData = snapshot.data;
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: const [appBarColor1, appBarColor2],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 1.0],
+          return SafeArea(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: const [appBarColor1, appBarColor2],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 1.0],
+                ),
               ),
-            ),
-            child: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: Offstage(
-                offstage: isSearching || bloc.controller.isAnimating,
-                child: Container(
-                  padding: EdgeInsets.only(
-                      top: kToolbarHeight * 1.8, bottom: appBarBottomHeight),
-                  margin: EdgeInsets.symmetric(
-                    vertical: 5,
-                  ),
+              child: FlexibleSpaceBar(
+                collapseMode: CollapseMode.pin,
+                background: Offstage(
+                  offstage: isSearching || bloc.controller.isAnimating,
                   child: Row(
                     children: [
                       _buildWeatherLeft(weatherData),
@@ -278,7 +272,8 @@ class _HomePageState extends State<HomePage>
         break;
     }
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.48,
+      width: MediaQuery.of(context).size.width * 0.52,
+      height: MediaQuery.of(context).size.height * 0.15,
       child: Row(
         children: [
           Expanded(
@@ -287,15 +282,19 @@ class _HomePageState extends State<HomePage>
           ),
           Container(
             width: 1,
-            margin: EdgeInsets.symmetric(
-              vertical: 10,
+            margin: EdgeInsets.only(
+              top: 10,
+              bottom: 20,
             ),
             color: Colors.grey,
           ),
           Expanded(
-              flex: 5,
-              child: FractionallySizedBox(
-                  widthFactor: 0.7, child: Image.asset(weatherIcon))),
+            flex: 5,
+            child: FractionallySizedBox(
+              widthFactor: 0.8,
+              child: Image.asset(weatherIcon),
+            ),
+          ),
         ],
       ),
     );
@@ -313,6 +312,7 @@ class _HomePageState extends State<HomePage>
         : "——";
     return Column(
       children: [
+        Spacer(),
         Text(
           T,
           style: TextStyle(
@@ -320,13 +320,16 @@ class _HomePageState extends State<HomePage>
             color: whiteColor,
           ),
         ),
-        Text(
-          minT + " / " + maxT,
-          style: TextStyle(
-            fontSize: 15,
-            color: whiteColor,
+        Expanded(
+          child: Text(
+            minT + " / " + maxT,
+            style: TextStyle(
+              fontSize: 15,
+              color: whiteColor,
+            ),
           ),
         ),
+        Spacer(),
       ],
     );
   }
@@ -352,31 +355,32 @@ class _HomePageState extends State<HomePage>
             "%"
         : "降雨 ——%";
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.52,
+      width: MediaQuery.of(context).size.width * 0.48,
+      height: 120,
       child: Row(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 wX,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: whiteColor,
                 ),
               ),
               Text(
                 cT,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: whiteColor,
                 ),
               ),
               Text(
                 poP12h,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: whiteColor,
                 ),
               ),
