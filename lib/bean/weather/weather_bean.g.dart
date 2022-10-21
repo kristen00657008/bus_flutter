@@ -20,7 +20,7 @@ Map<String, dynamic> _$WeatherBeanToJson(WeatherBean instance) =>
     };
 
 Result _$ResultFromJson(Map<String, dynamic> json) => Result(
-      resource_id: json['resource_id'] as String? ?? '',
+      resourceId: json['resource_id'] as String? ?? '',
       fields: (json['fields'] as List<dynamic>?)
               ?.map((e) => Field.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -28,7 +28,7 @@ Result _$ResultFromJson(Map<String, dynamic> json) => Result(
     );
 
 Map<String, dynamic> _$ResultToJson(Result instance) => <String, dynamic>{
-      'resource_id': instance.resource_id,
+      'resource_id': instance.resourceId,
       'fields': instance.fields,
     };
 

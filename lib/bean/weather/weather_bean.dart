@@ -28,13 +28,13 @@ class WeatherBean {
 @JsonSerializable()
 class Result {
   @JsonKey(name: 'resource_id', defaultValue: "")
-  String resource_id;
+  String resourceId;
 
   @JsonKey(name: 'fields', defaultValue: [])
   List<Field> fields;
 
   Result({
-    required this.resource_id,
+    required this.resourceId,
     required this.fields,
   });
 

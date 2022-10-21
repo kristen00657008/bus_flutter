@@ -2,9 +2,9 @@ import 'package:bus/bean/bus/route_bean/route_bean.dart';
 import 'package:bus/bean/weather/weather_bean.dart';
 import 'package:bus/bloc/system/application_bloc.dart';
 import 'package:bus/bloc/system/default_page_bloc.dart';
-import 'package:bus/http/weather/weather_repository.dart';
 import 'package:bus/resource/city_data.dart';
 import 'package:bus/resource/colors.dart';
+import 'package:bus/resource/extension.dart';
 import 'package:bus/route/page_name.dart';
 import 'package:bus/route/route_mixin.dart';
 import 'package:flutter/material.dart';
@@ -244,33 +244,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildWeatherLeft(WeatherBean? weatherData) {
-    final String wX = weatherData != null
-        ? weatherData.weatherElementList[6].time[0].elementValue.last.value
-        : "";
-    var weatherIcon = "";
-    switch (wX) {
-      case "02": // 晴時多雲
-        weatherIcon = "assets/sun.png";
-        break;
-      case "03": // 多雲時晴
-        weatherIcon = "assets/partly_clear.png";
-        break;
-      case "04": // 多雲
-        weatherIcon = "assets/cloudy.png";
-        break;
-      case "05": // 多雲時陰
-        weatherIcon = "assets/over_cloudy.png";
-        break;
-      case "06": // 陰時多雲
-        weatherIcon = "assets/partly_clear.png";
-        break;
-      case "22": // 多雲午後短暫陣雨
-        weatherIcon = "assets/raining.png";
-        break;
-      default:
-        weatherIcon = "assets/partly_clear.png";
-        break;
-    }
+    String weatherIcon = bloc.getWeatherIcon(weatherData);
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.52,
       height: MediaQuery.of(context).size.height * 0.15,
@@ -301,20 +275,11 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildTemperature(WeatherBean? weatherData) {
-    final T = weatherData != null
-        ? weatherData.weatherElementList[1].time[0].elementValue.first.value
-        : "——";
-    final minT = weatherData != null
-        ? weatherData.weatherElementList[8].time[0].elementValue.first.value
-        : "——";
-    final maxT = weatherData != null
-        ? weatherData.weatherElementList[12].time[0].elementValue.first.value
-        : "——";
     return Column(
       children: [
         Spacer(),
         Text(
-          T,
+          weatherData != null ? weatherData.T : "—",
           style: TextStyle(
             fontSize: 60,
             color: whiteColor,
@@ -322,7 +287,9 @@ class _HomePageState extends State<HomePage>
         ),
         Expanded(
           child: Text(
-            minT + " / " + maxT,
+            weatherData != null
+                ? weatherData.minT + " / " + weatherData.maxT
+                : "- / -",
             style: TextStyle(
               fontSize: 15,
               color: whiteColor,
@@ -335,25 +302,6 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildWeatherRight(WeatherBean? weatherData) {
-    final String wX = weatherData != null
-        ? weatherData.weatherElementList[6].time[0].elementValue.first.value
-        : "——";
-    final String minCT = weatherData != null
-        ? weatherData.weatherElementList[3].time[0].elementValue.last.value
-        : "——";
-    final String maxCT = weatherData != null
-        ? weatherData.weatherElementList[7].time[0].elementValue.last.value
-        : "——";
-    final cT = weatherData != null
-        ? minCT == maxCT
-            ? minCT
-            : minCT + "至" + maxCT
-        : "——";
-    final poP12h = weatherData != null
-        ? "降雨 " +
-            weatherData.weatherElementList[0].time[0].elementValue.last.value +
-            "%"
-        : "降雨 ——%";
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.48,
       height: 120,
@@ -364,21 +312,21 @@ class _HomePageState extends State<HomePage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                wX,
+                weatherData != null ? weatherData.wX : "—",
                 style: TextStyle(
                   fontSize: 16,
                   color: whiteColor,
                 ),
               ),
               Text(
-                cT,
+                weatherData != null ? weatherData.cT : "—",
                 style: TextStyle(
                   fontSize: 14,
                   color: whiteColor,
                 ),
               ),
               Text(
-                poP12h,
+                weatherData != null ? "降雨 ${weatherData.pop12h} %" : "—",
                 style: TextStyle(
                   fontSize: 14,
                   color: whiteColor,
@@ -528,15 +476,6 @@ class _HomePageState extends State<HomePage>
             );
           }),
     );
-  }
-
-  int? parseIntPrefix(String s) {
-    var re = RegExp(r'(-?[0-9]+).*');
-    var match = re.firstMatch(s);
-    if (match == null) {
-      return null;
-    }
-    return int.parse(match.group(1)!);
   }
 
   Widget _buildHistory() {

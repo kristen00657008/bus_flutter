@@ -144,12 +144,11 @@ class HomePageBloc extends PageBloc {
       var aValue = parseIntPrefix(a.routeName.tw);
       var bValue = parseIntPrefix(b.routeName.tw);
       if (aValue != null && bValue != null) {
-        if(a.routeName.tw.startsWith(routeName) ) {
+        if (a.routeName.tw.startsWith(routeName)) {
           return aValue - bValue;
         } else {
           return 0;
         }
-
       }
 
       if (aValue == null && bValue == null) {
@@ -175,6 +174,37 @@ class HomePageBloc extends PageBloc {
       return null;
     }
     return int.parse(match.group(1)!);
+  }
+
+  String getWeatherIcon(WeatherBean? weatherData) {
+    final String wX = weatherData != null
+        ? weatherData.weatherElementList[6].time[0].elementValue.last.value
+        : "";
+    var weatherIcon = "";
+    switch (wX) {
+      case "02": // 晴時多雲
+        weatherIcon = "assets/sun.png";
+        break;
+      case "03": // 多雲時晴
+        weatherIcon = "assets/partly_clear.png";
+        break;
+      case "04": // 多雲
+        weatherIcon = "assets/cloudy.png";
+        break;
+      case "05": // 多雲時陰
+        weatherIcon = "assets/over_cloudy.png";
+        break;
+      case "06": // 陰時多雲
+        weatherIcon = "assets/partly_clear.png";
+        break;
+      case "22": // 多雲午後短暫陣雨
+        weatherIcon = "assets/raining.png";
+        break;
+      default:
+        weatherIcon = "assets/partly_clear.png";
+        break;
+    }
+    return weatherIcon;
   }
 
   @override
